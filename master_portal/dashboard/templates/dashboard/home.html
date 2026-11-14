@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 {% if page == "schedule" or page == "journal" %}
-<div class="heading-row"><div><p class="eyebrow">{{ day|date:"l, j E Y" }}</p><h1>{% if page == "journal" %}Журнал посещений{% else %}Сегодня в мастерской{% endif %}</h1><p class="subtext">{{ user.first_name|default:"Денис" }}, ваши занятия и записи на день</p></div><a class="primary" href="{% url 'operation' 'lesson' %}"><span class="plus-sign">+</span> Создать занятие</a></div>
+<div class="heading-row"><div><p class="eyebrow">{{ day|date:"l, j E Y" }}</p><h1>{% if page == "journal" %}Журнал посещений{% elif day == today %}Сегодня в мастерской{% else %}Расписание мастерской{% endif %}</h1><p class="subtext">{{ user.first_name|default:"Денис" }}, ваши занятия и записи на день</p></div><a class="primary" href="{% url 'operation' 'lesson' %}"><span class="plus-sign">+</span> Создать занятие</a></div>
 {% if page == "schedule" %}
 <section class="hero">
 <div class="hero-copy"><p class="eyebrow">Выбрано в расписании</p><h2>{% if selected %}{{ selected.title }}{% else %}Свободный день{% endif %}</h2>{% if selected %}<p>{{ selected.starts_at|date:"H:i" }}–{{ selected.ends_at|date:"H:i" }} · {{ selected.get_kind_display }} занятие</p><a class="text-button hero-action" href="#journal-panel">Открыть журнал ↗</a>{% else %}<p>Добавьте занятие в расписание.</p>{% endif %}</div>
