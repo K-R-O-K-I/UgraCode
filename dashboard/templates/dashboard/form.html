@@ -8,8 +8,14 @@
 {% if form.non_field_errors %}<div class="modal-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 <div class="form-grid">
 {% for field in form.visible_fields %}
-<div class="form-field {% if field.name == 'description' or field.name == 'reason' or field.name == 'title' %}full{% endif %}">
-<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}
+<div class="form-field {% if field.name == 'description' or field.name == 'reason' or field.name == 'title' or field.name == 'child' %}full{% endif %}">
+{% if operation == "payment" and field.name == "child" %}
+<fieldset class="child-picker"><legend>Ученик</legend>
+<label for="child-search">Найти ребёнка или семью</label>
+<input id="child-search" type="search" placeholder="Имя ребёнка или семьи" autocomplete="off" data-child-search>
+<div class="child-options">{{ field }}</div><p class="child-search-empty" role="status" hidden>Никого не нашли. Измените запрос.</p>
+</fieldset>
+{% else %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% endif %}{% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}
 </div>
 {% endfor %}
 </div>

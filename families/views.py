@@ -63,7 +63,7 @@ def home(request):
     now = timezone.now()
     today = timezone.localdate(now)
     children = request.family.children.all().defer("avatar").order_by("pk")
-    bookings = Booking.objects.filter(child__family=request.family).select_related(
+    bookings = Booking.objects.filter(child__family=request.family, status="booked", lesson__status="scheduled").select_related(
         "child", "lesson",
     ).defer("child__avatar").order_by("lesson__starts_at", "pk")
     data = context(request, page)
@@ -98,7 +98,7 @@ def home(request):
                 lesson__in=month_lessons, lesson__status="scheduled", status="booked",
             ).values_list("lesson__starts_at", flat=True)
         }
-        lessons = month_lessons.filter(starts_at__date=selected_day)
+        lessons = month_lessons.filter(starts_at__date=selected_day, status="scheduled")
         data.update(
             selected_day=selected_day, previous_month=month_start - timedelta(days=1),
             next_month=next_month,
@@ -150,6 +150,8 @@ def home(request):
 def operation(request, action):
     titles = {"edit": "Редактировать профиль", "child": "Добавить ребёнка", "book": "Записаться на занятие", "cancel": "Отменить запись",
               "reason": "Сообщить причину отсутствия", "buy": "Купить абонемент"}
+    if action == "reason":
+        return HttpResponse(status=404)
     if action not in titles:
         return HttpResponse(status=404)
     booking = None
@@ -167,7 +169,7 @@ def operation(request, action):
         return HttpResponse(status=404)
     if request.GET.get("lesson", "").isdecimal():
         initial["lesson"] = get_object_or_404(Lesson, pk=request.GET["lesson"])
-    form_class = {"child": forms.ChildForm, "edit": forms.ChildForm, "book": forms.BookForm, "cancel": forms.ReasonForm,
+    form_class = {"child": forms.ChildForm, "edit": forms.ChildForm, "book": forms.BookForm, "cancel": forms.CancelForm,
                   "reason": forms.ReasonForm, "buy": forms.BuyForm}[action]
     kwargs = {"family": request.family} if action in ("book", "buy") else {}
     if action == "edit":
@@ -187,12 +189,14 @@ def operation(request, action):
             elif action == "edit":
                 form.save()
             elif action == "book":
+                if services.book_from_balance(request.family, data["child"], data["lesson"]):
+                    return redirect("/family/?page=upcoming")
                 if settings.PAYMENT_MODE != "demo" or not settings.DEBUG:
                     raise ValidationError("Тестовая оплата записи пока недоступна.")
                 checkout = services.create_booking_checkout(request.family, data["child"], data["lesson"])
                 return redirect("family-checkout", pk=checkout.pk)
             elif action == "cancel":
-                services.parent_cancel(request.family, booking, data["reason"])
+                services.parent_cancel(request.family, booking, confirmed_late=data["confirm_late"])
             elif action == "reason":
                 services.absence_reason(request.family, booking, data["reason"])
             else:
@@ -209,6 +213,8 @@ def operation(request, action):
             form.add_error(None, "Запись уже изменилась. Обновите страницу и проверьте результат.")
     page = "children" if action in {"child", "edit", "buy"} else "upcoming" if booking else "calendar"
     result = context(request, page)
+    if action == "cancel":
+        result["late_cancel"] = booking.lesson.starts_at - timezone.now() < timedelta(hours=booking.lesson.policy.free_cancel_hours)
     result.update(form=form, title=titles[action], action=action, booking=booking, lesson=initial.get("lesson"))
     return render(request, "families/form.html", result)
 

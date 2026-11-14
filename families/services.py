@@ -50,7 +50,7 @@ def add_child(family, data):
 
 
 @transaction.atomic
-def parent_cancel(family, booking, reason):
+def parent_cancel(family, booking, reason='', confirmed_late=False):
     lesson = Lesson.objects.select_for_update().get(pk=booking.lesson_id)
     child = Child.objects.select_for_update().get(pk=booking.child_id, family=family)
     booking = Booking.objects.select_for_update().get(pk=booking.pk, child=child)
@@ -59,23 +59,29 @@ def parent_cancel(family, booking, reason):
     if lesson.starts_at <= timezone.now() or booking.attendance != "pending":
         raise ValidationError("Для прошедшего занятия можно сообщить причину отсутствия. Отметку изменяет мастер.")
     late = lesson.starts_at-timezone.now() < timedelta(hours=lesson.policy.free_cancel_hours)
-    charge = late and lesson.policy.charge_late_cancel
-    if charge:
-        day = timezone.localdate(lesson.starts_at)
+    if late and not confirmed_late:
+        raise ValidationError("Срок бесплатной отмены истёк. Подтвердите отмену: одно занятие сгорит.")
+    before_count = lesson.active_bookings.count()
+    if not late:
+        master.refund_booking(booking)
+    elif not booking.prepaid:
         subscriptions = Subscription.objects.select_for_update().filter(
-            invoice__child=child, starts_on__lte=day, expires_on__gte=day
+            invoice__child=child, starts_on__lte=timezone.localdate(),
+            expires_on__gte=timezone.localdate(),
         ).order_by("expires_on", "pk")
         subscription = next((item for item in subscriptions if item.balance > 0), None)
         if subscription:
-            LessonEntry.objects.create(subscription=subscription, booking=booking, delta=-1, reason="Поздняя отмена родителем")
+            LessonEntry.objects.create(subscription=subscription, booking=booking, delta=-1, reason="Поздняя отмена")
         else:
             booking.cancellation_charge_pending = True
+    if late:
+        LessonEntry.objects.filter(booking=booking, delta__lt=0, reversal__isnull=True).update(reason="Поздняя отмена (сгорело)")
     booking.status = "cancelled"
     booking.attendance = "cancelled"
     booking.parent_reason = reason
     booking.save(update_fields=["status", "attendance", "parent_reason", "cancellation_charge_pending"])
     master.audit(ParentActor(family), f"{child.name} — запись отменена родителем", reason=reason)
-    Notification.objects.create(text=f"{child.name} · отмена «{lesson.title}». Причина — {reason}")
+    Notification.objects.create(text=f"{child.name} отменил запись на «{lesson.title}» ({timezone.localtime(lesson.starts_at):%d.%m %H:%M}). Отмена {timezone.localtime():%d.%m %H:%M}. Записей было {before_count}, стало {lesson.active_bookings.count()}.")
     master.family_notice(family.pk, f"Запись на «{lesson.title}» для {child.name} отменена.")
     master.sync_low_balance_notice(child.pk)
 
@@ -150,11 +156,15 @@ def complete(checkout_id):
         lesson = Lesson.objects.select_for_update().get(pk=checkout.lesson_id)
     child = Child.objects.select_for_update().get(pk=invoice.child_id)
     if lesson is not None:
-        master.book_locked(ParentActor(child.family), lesson, child)
+        booking = master.book_locked(ParentActor(child.family), lesson, child)
     Payment.objects.create(invoice=invoice, method=checkout.provider, amount=invoice.amount, operation_key=checkout.pk)
     day = timezone.localdate()
     subscription = Subscription.objects.create(invoice=invoice, starts_on=day, expires_on=day+timedelta(days=invoice.validity_days-1))
     LessonEntry.objects.create(subscription=subscription, delta=invoice.lessons, reason="Оплачен абонемент")
+    if lesson is not None:
+        LessonEntry.objects.create(subscription=subscription, booking=booking, delta=-1, reason="Запись на занятие")
+        booking.prepaid = True
+        booking.save(update_fields=["prepaid"])
     invoice.status = "paid"
     invoice.save(update_fields=["status"])
     checkout.status = "succeeded"
@@ -174,3 +184,22 @@ def decline(checkout_id):
     invoice.status = "cancelled"
     checkout.save(update_fields=["status"])
     invoice.save(update_fields=["status"])
+
+
+@transaction.atomic
+def book_from_balance(family, child, lesson):
+    lesson = Lesson.objects.select_for_update().get(pk=lesson.pk)
+    child = Child.objects.select_for_update().get(pk=child.pk, family=family, family__active=True)
+    day = timezone.localdate(lesson.starts_at)
+    subscriptions = Subscription.objects.select_for_update().filter(
+        invoice__child=child, starts_on__lte=day, expires_on__gte=day,
+    ).order_by("expires_on", "pk")
+    subscription = next((item for item in subscriptions if item.balance > 0), None)
+    if subscription is None:
+        return None
+    booking = master.book_locked(ParentActor(family), lesson, child)
+    LessonEntry.objects.create(subscription=subscription, booking=booking, delta=-1, reason="Запись на занятие")
+    booking.prepaid = True
+    booking.save(update_fields=["prepaid"])
+    master.sync_low_balance_notice(child.pk)
+    return booking

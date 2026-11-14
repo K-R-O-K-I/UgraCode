@@ -14,14 +14,19 @@ class LessonForm(forms.Form):
     starts_at = forms.DateTimeField(label="Начало", widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"))
     ends_at = forms.DateTimeField(label="Окончание", widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"))
     kind = forms.ChoiceField(label="Формат", choices=Lesson.KIND)
-    capacity = forms.IntegerField(label="Количество мест", min_value=1, max_value=50, initial=6)
+    capacity = forms.IntegerField(label="Количество мест", min_value=1, max_value=50, initial=6, required=False)
     description = forms.CharField(label="Задание и материалы", required=False, max_length=2000, widget=forms.Textarea(attrs={"rows": 3}))
+    free_cancel_hours = forms.IntegerField(label="Бесплатная отмена, часов до начала", min_value=0, max_value=168, initial=12)
+    charge_absence = forms.BooleanField(label="Списывать занятие при пропуске", required=False, initial=True)
     def clean(self):
         data = super().clean()
         if data.get("ends_at") and data.get("starts_at") and data["ends_at"] <= data["starts_at"]:
             raise ValidationError("Окончание должно быть позже начала.")
-        if data.get("kind") == "individual" and data.get("capacity") != 1:
-            raise ValidationError("Для индивидуального занятия укажите одно место.")
+        if data.get("kind") == "individual":
+            data["capacity"] = 1
+            self._errors.pop("capacity", None)
+        elif not data.get("capacity"):
+            self.add_error("capacity", "Укажите количество мест.")
         return data
 
 
@@ -50,10 +55,18 @@ class MoveForm(BookingForm):
     reason = forms.CharField(label="Причина переноса", max_length=500)
 
 
+class PaymentChildField(forms.ModelChoiceField):
+    def label_from_instance(self, child):
+        return f"{child.name} · {child.family.contact_name}"
+
+
 class PaymentForm(forms.Form):
-    child = forms.ModelChoiceField(label="Ученик", queryset=Child.objects.filter(family__active=True))
+    child = PaymentChildField(
+        label="Ученик", empty_label=None, widget=forms.RadioSelect,
+        queryset=Child.objects.filter(family__active=True).select_related("family").order_by("name", "pk"),
+    )
     amount = forms.DecimalField(label="Получено, ₽", max_digits=12, decimal_places=2, min_value=Decimal("0.01"), initial=4800)
-    method = forms.ChoiceField(label="Способ оплаты", choices=Payment._meta.get_field("method").choices)
+    method = forms.ChoiceField(label="Способ оплаты", choices=[("cash", "Наличные"), ("transfer", "Перевод")])
     lessons = forms.IntegerField(label="Количество занятий", min_value=1, max_value=100, initial=4)
     validity_days = forms.IntegerField(label="Срок действия, дней", min_value=1, max_value=365, initial=30)
     operation_key = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)

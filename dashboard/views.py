@@ -16,9 +16,9 @@ from . import forms, services
 from .models import AuditEvent, Booking, Child, Lesson, LessonPolicy, Notification, Payment, Receipt
 
 PAGES = [
-    ("schedule", "Расписание", "▦"), ("journal", "Журнал", "▤"),
-    ("children", "Ученики", "♧"), ("payments", "Оплаты", "₽"),
-    ("history", "История", "↶"), ("settings", "Правила", "⚙"),
+    ("schedule", "Сегодня", "▦"), ("journal", "Расписание", "▤"),
+    ("payments", "Оплаты", "₽"),
+    ("history", "История", "↶"),
 ]
 
 
@@ -34,7 +34,7 @@ def staff_only(view):
 
 def base_context(request, page="schedule"):
     return {
-        "page": page, "nav": PAGES,
+        "now": timezone.now(), "page": page, "nav": PAGES,
         "page_title": dict((key, name) for key, name, _ in PAGES).get(page, "Мастерская"),
         "unread": Notification.objects.filter(family__isnull=True, read_at__isnull=True).count(),
     }
@@ -49,6 +49,8 @@ def home(request):
     try:
         day = date.fromisoformat(request.GET.get("date", ""))
     except ValueError:
+        day = timezone.localdate()
+    if page == "schedule":
         day = timezone.localdate()
     query = request.GET.get("q", "").strip()
     kind = request.GET.get("kind", "")
@@ -94,18 +96,18 @@ def home(request):
 
 ACTIONS = {
     "lesson": (forms.LessonForm, "Новое занятие", services.save_lesson),
-    "booking": (forms.BookingForm, "Записать ребёнка", services.book),
     "attendance": (forms.AttendanceForm, "Отметка посещения", services.mark),
     "cancel": (forms.CancelForm, "Отменить занятие", services.cancel),
     "move": (forms.MoveForm, "Перенести запись", services.move),
     "payment": (forms.PaymentForm, "Внести оплату", services.pay),
     "receipt": (forms.ReceiptForm, "Прикрепить чек", services.attach_receipt),
-    "policy": (forms.PolicyForm, "Правила новых занятий", services.policy),
 }
 
 
 @staff_only
 def operation(request, action):
+    if action == "move" or (action == "lesson" and request.GET.get("id")):
+        return HttpResponse(status=404)
     if action not in ACTIONS:
         return HttpResponse(status=404)
     form_class, title, handler = ACTIONS[action]
@@ -123,9 +125,14 @@ def operation(request, action):
         if pk.isdecimal():
             lesson = get_object_or_404(Lesson, pk=int(pk))
             title = "Изменить занятие"
-            initial = {field: getattr(lesson, field) for field in forms.LessonForm.base_fields}
+            initial = {field: getattr(lesson.policy if field in forms.PolicyForm.base_fields else lesson, field) for field in forms.LessonForm.base_fields}
         else:
             start = timezone.localtime().replace(hour=16, minute=0, second=0, microsecond=0)
+            try:
+                chosen = date.fromisoformat(request.GET.get("date", ""))
+                start = start.replace(year=chosen.year, month=chosen.month, day=chosen.day)
+            except ValueError:
+                pass
             initial.update(starts_at=start, ends_at=start + timedelta(minutes=90))
     if action == "attendance":
         initial["attendance"] = request.GET.get("value", "present")

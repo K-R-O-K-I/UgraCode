@@ -45,8 +45,30 @@ def lesson_notice(lesson, text):
         family_notice(family_id, text)
 
 
+def refund_booking(booking):
+    charges = list(LessonEntry.objects.filter(booking=booking, delta__lt=0, reversal__isnull=True).exclude(reason="Поздняя отмена (сгорело)"))
+    if charges:
+        restore(booking)
+        for charge in charges:
+            subscription = charge.subscription
+            if subscription.expires_on < timezone.localdate():
+                subscription.expires_on = timezone.localdate() + timedelta(days=30)
+                subscription.save(update_fields=["expires_on"])
+    else:
+        plan, _ = PassPlan.objects.get_or_create(
+            name="Возврат отменённого занятия", public=False,
+            defaults={"lessons": 1, "validity_days": 30, "price": 0},
+        )
+        invoice = Invoice.objects.create(child=booking.child, plan=plan, amount=0, lessons=1, validity_days=30)
+        subscription = Subscription.objects.create(
+            invoice=invoice, starts_on=timezone.localdate(),
+            expires_on=timezone.localdate() + timedelta(days=30),
+        )
+        LessonEntry.objects.create(subscription=subscription, booking=booking, delta=1, reason="Возврат отменённого занятия")
+
+
 def restore(booking):
-    charges = LessonEntry.objects.filter(booking=booking, delta__lt=0, reversal__isnull=True)
+    charges = LessonEntry.objects.filter(booking=booking, delta__lt=0, reversal__isnull=True).exclude(reason="Поздняя отмена (сгорело)")
     for charge in charges:
         LessonEntry.objects.create(
             subscription=charge.subscription, booking=booking, delta=-charge.delta,
@@ -56,14 +78,21 @@ def restore(booking):
 
 @transaction.atomic
 def save_lesson(actor, data, pk=None):
-    lesson = Lesson.objects.select_for_update().get(pk=pk) if pk else Lesson()
+    if pk:
+        raise ValidationError("Созданное занятие можно только отменить.")
+    lesson = Lesson()
     if pk and lesson.status != "scheduled":
         raise ValidationError("Отменённое занятие нельзя редактировать.")
     if pk and lesson.active_bookings.count() > data["capacity"]:
         raise ValidationError("Вместимость меньше числа записанных детей.")
+    data = data.copy()
+    data.setdefault("charge_late_cancel", True)
+    policy_fields = ("free_cancel_hours", "charge_absence", "charge_late_cancel")
+    if all(field in data for field in policy_fields):
+        lesson.policy = LessonPolicy.objects.create(**{field: data.pop(field) for field in policy_fields})
     for key, value in data.items():
         setattr(lesson, key, value)
-    if not pk:
+    if not lesson.policy_id:
         lesson.policy = LessonPolicy.objects.order_by("-pk").first()
         if not lesson.policy:
             lesson.policy = LessonPolicy.objects.create()
@@ -88,7 +117,6 @@ def book_locked(actor, lesson, child):
     if lesson.remaining <= 0:
         raise ValidationError("Свободных мест больше нет.")
     if old:
-        restore(old)
         old.status, old.attendance = "booked", "pending"
         old.parent_reason = ""
         old.cancellation_charge_pending = False
@@ -97,7 +125,7 @@ def book_locked(actor, lesson, child):
     else:
         booking = Booking.objects.create(lesson=lesson, child=child)
     audit(actor, f"{child.name} — запись на «{lesson.title}»")
-    Notification.objects.create(text=f"{child.name} записан на «{lesson.title}»")
+    Notification.objects.create(text=f"{child.name} записан на «{lesson.title}» · {timezone.localtime(lesson.starts_at):%d.%m %H:%M} · {lesson.active_bookings.count()}/{lesson.capacity} мест")
     family_notice(child.family_id, f"{child.name} записан на «{lesson.title}».")
     return booking
 
@@ -118,6 +146,8 @@ def mark(actor, data):
     Child.objects.select_for_update().get(pk=source.child_id)
     booking = Booking.objects.select_for_update().get(pk=source.pk)
     attendance, reason = data["attendance"], data.get("reason", "")
+    if attendance not in ("pending", "present", "absent"):
+        raise ValidationError("Отменить запись может родитель.")
     if lesson.status != "scheduled" or booking.status != "booked":
         raise ValidationError("Занятие или запись отменены. Для восстановления запишите ребёнка повторно.")
     if booking.attendance == attendance:
@@ -131,6 +161,11 @@ def mark(actor, data):
         or (attendance == "absent" and policy.charge_absence)
         or (attendance == "cancelled" and late and policy.charge_late_cancel)
     )
+    if booking.prepaid:
+        booking.attendance = attendance
+        booking.save(update_fields=['attendance'])
+        audit(actor, f'{booking.child.name} — {booking.get_attendance_display()}', reason=reason)
+        return
     restore(booking)
     if charge:
         day = timezone.localdate(lesson.starts_at)
@@ -160,16 +195,16 @@ def cancel(actor, data):
     lesson = Lesson.objects.select_for_update().get(pk=data["lesson"].pk)
     if lesson.status == "cancelled":
         return
-    bookings = list(lesson.bookings.order_by("pk"))
+    bookings = list(lesson.active_bookings.order_by("pk"))
     list(Child.objects.select_for_update().filter(pk__in=[item.child_id for item in bookings]).order_by("pk"))
     for booking in bookings:
-        restore(booking)
+        refund_booking(booking)
         booking.status, booking.attendance = "cancelled", "cancelled"
         booking.cancellation_charge_pending = False
         booking.save(update_fields=["status", "attendance", "cancellation_charge_pending"])
     for child_id in {booking.child_id for booking in bookings}:
         sync_low_balance_notice(child_id)
-    lesson_notice(lesson, f"Занятие «{lesson.title}» отменено мастером. Причина — {data['reason']}")
+    lesson_notice(lesson, f"Занятие «{lesson.title}» отменено мастером. Одно занятие возвращено на баланс. Причина — {data['reason']}")
     lesson.status = "cancelled"
     lesson.save(update_fields=["status"])
     audit(actor, f"Отменено занятие «{lesson.title}»", reason=data["reason"])

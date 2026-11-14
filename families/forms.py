@@ -38,6 +38,10 @@ class BookForm(forms.Form):
         self.fields["lesson"].queryset = lessons
 
 
+class CancelForm(forms.Form):
+    confirm_late = forms.BooleanField(required=False, widget=forms.HiddenInput)
+
+
 class ReasonForm(forms.Form):
     reason = forms.CharField(label="Причина отсутствия", max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
 

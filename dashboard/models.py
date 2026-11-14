@@ -43,6 +43,7 @@ class Lesson(models.Model):
 
 
 class Booking(models.Model):
+    prepaid = models.BooleanField(default=False)
     parent_reason = models.TextField(blank=True)
     cancellation_charge_pending = models.BooleanField(default=False)
     ATTENDANCE = [("pending", "Без отметки"), ("present", "Посетил"), ("absent", "Пропустил"), ("cancelled", "Отмена")]

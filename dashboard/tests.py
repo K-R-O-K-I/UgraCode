@@ -25,8 +25,8 @@ class MasterDashboardTests(TestCase):
         for page in ("schedule", "journal", "children", "payments", "history", "settings", "notifications"):
             response = self.client.get("/", {"page": page})
             self.assertEqual(response.status_code, 200, page)
-            self.assertContains(response, 'src="/static/app.js"')
-        for action in ("lesson", "booking", "payment", "policy"):
+            self.assertContains(response, 'src="/static/app.js?')
+        for action in ("lesson", "payment"):
             self.assertEqual(self.client.get(f"/form/{action}/").status_code, 200)
 
     def test_authentication_and_csrf(self):
@@ -122,6 +122,27 @@ class MasterDashboardTests(TestCase):
         services.cancel(self.master, {"lesson": self.lesson, "reason": "Test"})
         self.assertEqual(self.child.balance, 4)
 
+    def test_schedule_journal_and_individual_capacity(self):
+        from .forms import LessonForm
+        start = timezone.localtime() + timedelta(days=2)
+        form = LessonForm({
+            "title": "Индивидуальное", "kind": "individual",
+            "starts_at": start, "ends_at": start + timedelta(hours=1),
+            "free_cancel_hours": 12,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["capacity"], 1)
+        response = self.client.get("/", {"date": "2000-01-01"})
+        self.assertEqual(response.context["day"], timezone.localdate())
+        self.assertNotContains(response, "Создать занятие")
+        response = self.client.get("/?page=journal")
+        self.assertContains(response, "Создать занятие")
+        self.assertContains(response, 'class="inline-attendance"')
+        self.assertEqual(self.client.post(f"/form/lesson/?id={self.lesson.pk}", {}).status_code, 404)
+        response = self.client.get("/families/", {"q": self.child.name})
+        self.assertContains(response, self.child.name)
+        self.assertEqual(self.client.get(f"/children/{self.child.pk}/").status_code, 200)
+
     def test_get_does_not_modify_and_post_creates_lesson(self):
         count = Lesson.objects.count()
         self.client.get("/form/lesson/")
@@ -131,9 +152,14 @@ class MasterDashboardTests(TestCase):
             "title": "Кормушка", "starts_at": start.strftime("%Y-%m-%dT%H:%M"),
             "ends_at": (start+timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M"),
             "kind": "group", "capacity": 2, "description": "Дерево и клей",
+            "free_cancel_hours": 24, "charge_absence": True,
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Lesson.objects.count(), count+1)
+        self.assertEqual(Lesson.objects.get(title="Кормушка").policy.free_cancel_hours, 24)
+        self.assertEqual(self.client.get("/form/booking/").status_code, 404)
+        self.assertEqual(self.client.post("/form/booking/", {}).status_code, 404)
+        self.assertEqual(self.client.get("/form/policy/").status_code, 404)
 
 class MasterFamilyIntegrationTests(TestCase):
     @classmethod

@@ -44,7 +44,7 @@ class FamilyTests(TestCase):
         for page in ("calendar", "upcoming", "children", "visits", "payments", "notifications"):
             response = self.client.get("/family/", {"page": page})
             self.assertEqual(response.status_code, 200, page)
-            self.assertContains(response, 'src="/static/app.js"')
+            self.assertContains(response, 'src="/static/app.js?')
             self.assertNotContains(response, self.other.contact_name)
             self.assertNotContains(response, self.other_child.name)
         self.assertEqual(self.client.get("/").status_code, 302)
@@ -81,19 +81,46 @@ class FamilyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Checkout.objects.count(), 0)
 
-    def test_booking_cancel_reason_visible_to_master(self):
+    def test_balance_booking_and_timely_cancellation(self):
+        balance = self.child.balance
         response = self.client.post("/family/form/book/", {"child": self.child.pk, "lesson": self.lesson.pk})
         self.assertEqual(response.status_code, 302)
-        self.client.post(response.url, {"action": "confirm"})
         booking = Booking.objects.get(lesson=self.lesson, child=self.child)
-        self.client.post(f"/family/form/cancel/?booking={booking.pk}", {"reason": "Заболел"})
+        self.assertEqual(self.child.balance, balance - 1)
+        self.client.post(f"/family/form/cancel/?booking={booking.pk}", {})
+        self.client.post(f"/family/form/cancel/?booking={booking.pk}", {})
+        self.assertEqual(self.child.balance, balance)
+        self.assertEqual(self.lesson.active_bookings.count(), 0)
+        self.assertTrue(Notification.objects.filter(family__isnull=True, text__contains="Записей было 1, стало 0").exists())
+        response = self.client.get("/family/", {"page": "visits"})
+        self.assertNotContains(response, self.lesson.title)
+
+    def test_late_cancellation_requires_confirmation_and_burns_once(self):
+        self.lesson.starts_at = timezone.now() + timedelta(hours=1)
+        self.lesson.ends_at = timezone.now() + timedelta(hours=2)
+        self.lesson.save()
+        balance = self.child.balance
+        booking = services.book_from_balance(self.family, self.child, self.lesson)
+        response = self.client.post(f"/family/form/cancel/?booking={booking.pk}", {})
+        self.assertContains(response, "сгорит")
         booking.refresh_from_db()
-        self.assertEqual(booking.status, "cancelled")
-        self.assertEqual(booking.parent_reason, "Заболел")
-        staff = Client()
-        staff.force_login(self.master)
-        response = staff.get("/", {"date": timezone.localdate(self.lesson.starts_at), "lesson": self.lesson.pk})
-        self.assertContains(response, "Заболел")
+        self.assertEqual(booking.status, "booked")
+        for _ in range(2):
+            self.client.post(f"/family/form/cancel/?booking={booking.pk}", {"confirm_late": "true"})
+        self.assertEqual(self.child.balance, balance - 1)
+        self.assertEqual(self.lesson.remaining, self.lesson.capacity)
+        services.book_from_balance(self.family, self.child, self.lesson)
+        self.assertEqual(self.child.balance, balance - 2)
+        master.cancel(self.master, {"lesson": self.lesson, "reason": "Отмена мастером"})
+        self.assertEqual(self.child.balance, balance - 1)
+
+    def test_master_cancel_refunds_reserved_lesson_once(self):
+        balance = self.child.balance
+        services.book_from_balance(self.family, self.child, self.lesson)
+        for _ in range(2):
+            master.cancel(self.master, {"lesson": self.lesson, "reason": "Мастер заболел"})
+        self.assertEqual(self.child.balance, balance)
+        self.assertEqual(self.lesson.active_bookings.count(), 0)
 
     def test_other_bookings_are_inaccessible(self):
         booking = Booking.objects.filter(child=self.other_child).first()
@@ -239,7 +266,7 @@ class FamilyTests(TestCase):
             outsider.get(f"/family/enter/{services.issue_link(self.other)}/")
             self.assertEqual(outsider.get(f"/children/{self.child.pk}/avatar/").status_code, 404)
             self.assertEqual(outsider.post(f"/family/form/child/?child={self.child.pk}", {"name": "Bad"}).status_code, 404)
-            self.assertContains(self.client.get("/family/?page=children"), "Возраст: 9")
+            self.assertContains(self.client.get("/family/?page=children"), "9 лет")
             self.assertTrue(b"".join(response.streaming_content))
 
     def test_child_rejects_invalid_age_and_non_image(self):
@@ -251,6 +278,8 @@ class FamilyTests(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_booking_payment_is_idempotent(self):
+        from dashboard.models import LessonEntry
+        LessonEntry.objects.filter(subscription__invoice__child=self.child).update(delta=0)
         data = {"child": self.child.pk, "lesson": self.lesson.pk}
         first = self.client.post("/family/form/book/", data)
         second = self.client.post("/family/form/book/", data)
@@ -263,6 +292,8 @@ class FamilyTests(TestCase):
         self.assertEqual(Booking.objects.filter(lesson=self.lesson, child=self.child).count(), 1)
 
     def test_filled_lesson_leaves_booking_checkout_unpaid(self):
+        from dashboard.models import LessonEntry
+        LessonEntry.objects.filter(subscription__invoice__child=self.child).update(delta=0)
         self.lesson.capacity = 1
         self.lesson.save(update_fields=["capacity"])
         response = self.client.post("/family/form/book/", {"child": self.child.pk, "lesson": self.lesson.pk})
@@ -274,6 +305,8 @@ class FamilyTests(TestCase):
 
     @override_settings(PAYMENT_MODE="disabled")
     def test_booking_payment_disabled(self):
+        from dashboard.models import LessonEntry
+        LessonEntry.objects.filter(subscription__invoice__child=self.child).update(delta=0)
         response = self.client.post("/family/form/book/", {"child": self.child.pk, "lesson": self.lesson.pk})
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Checkout.objects.filter(lesson=self.lesson).exists())

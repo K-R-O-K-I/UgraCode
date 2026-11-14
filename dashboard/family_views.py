@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from accounts.forms import FamilyForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -20,8 +21,11 @@ from .views import staff_only, base_context
 @never_cache
 def families(request):
     context = base_context(request, "families")
-    context.update(page_title="Управление семьями",
-                   families=Family.objects.filter(active=True).prefetch_related("children"))
+    query = request.GET.get("q", "").strip()
+    items = Family.objects.filter(active=True).prefetch_related("children")
+    if query:
+        items = items.filter(Q(contact_name__icontains=query) | Q(children__name__icontains=query)).distinct()
+    context.update(page_title="Семьи", families=items, query=query)
     return render(request, "dashboard/families.html", context)
 
 
@@ -81,7 +85,7 @@ def family_action(request, pk, action):
 def quick_attendance(request, pk):
     booking = get_object_or_404(Booking.objects.select_related("lesson"), pk=pk)
     value = request.POST.get("attendance")
-    if value not in dict(Booking.ATTENDANCE):
+    if value not in ("present", "absent", "pending"):
         messages.error(request, "Неизвестная отметка.")
     else:
         try:
@@ -92,4 +96,13 @@ def quick_attendance(request, pk):
         else:
             messages.success(request, "Отметка сохранена.")
     day = timezone.localdate(booking.lesson.starts_at).isoformat()
-    return redirect(f"/?page=journal&date={day}&lesson={booking.lesson_id}")
+    page = "journal" if request.POST.get("return_page") == "journal" else "schedule"
+    return redirect(f"/?page={page}&date={day}&lesson={booking.lesson_id}")
+
+
+@staff_only
+def child_profile(request, pk):
+    child = get_object_or_404(Child.objects.select_related("family"), pk=pk)
+    context = base_context(request, "families")
+    context.update(child=child, page_title=child.name)
+    return render(request, "dashboard/child_profile.html", context)

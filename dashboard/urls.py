@@ -3,6 +3,7 @@ from django.urls import path
 from dashboard import views
 from . import family_views
 urlpatterns = [
+    path("children/<int:pk>/", family_views.child_profile, name="child-profile"),
     path("families/", family_views.families, name="families"),
     path("families/new/", family_views.edit_family, name="family-create"),
     path("families/<int:pk>/<str:action>/", family_views.family_action, name="family-action"),

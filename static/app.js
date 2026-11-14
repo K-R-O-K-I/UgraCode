@@ -1,4 +1,38 @@
 (() => {
+  document.addEventListener("input", event => {
+    if (!event.target.matches("[data-child-search]")) return;
+    const picker = event.target.closest(".child-picker");
+    const query = event.target.value.trim().toLocaleLowerCase("ru");
+    let visible = 0;
+    picker.querySelectorAll(".child-options label").forEach(label => {
+      const matches = label.textContent.toLocaleLowerCase("ru").includes(query);
+      label.parentElement.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    picker.querySelector(".child-search-empty").hidden = visible > 0;
+  });
+  function updateCapacity() {
+    const kind = document.querySelector("#id_kind");
+    const capacity = document.querySelector("#id_capacity");
+    if (!kind || !capacity) return;
+    const individual = kind.value === "individual";
+    capacity.closest(".form-field").hidden = individual;
+    capacity.disabled = individual;
+  }
+  document.addEventListener("change", event => {
+    if (event.target.id === "id_kind") updateCapacity();
+  });
+  updateCapacity();
+  function updateLessonTimes() {
+    const now = Date.now();
+    document.querySelectorAll(".lesson-card[data-start]").forEach(card => {
+      const start = Date.parse(card.dataset.start), end = Date.parse(card.dataset.end);
+      card.classList.toggle("lesson-past", now >= end);
+      card.classList.toggle("lesson-current", now >= start && now < end);
+    });
+  }
+  updateLessonTimes();
+  setInterval(updateLessonTimes, 30000);
   // Progressive navigation: Django remains responsible for validation and access.
   let pending = false, queued = null, obsolete = false;
   history.scrollRestoration = 'manual';
@@ -61,6 +95,8 @@
       document.title = doc.title;
       document.body.className = doc.body.className;
       swap('main#content', doc);
+      updateCapacity();
+      updateLessonTimes();
       swap('.sidebar', doc);
       swap('.topbar', doc);
       document.querySelectorAll('details').forEach((node, index) => { if (opened.includes(index)) node.open = true; });
