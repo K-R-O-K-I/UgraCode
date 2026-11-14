@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from .models import (
     AuditEvent, Booking, Child, Family, Invoice, Lesson, LessonEntry,
@@ -17,6 +18,25 @@ def audit(actor, text, before=None, after=None, reason=""):
 
 def family_notice(family_id, text):
     Notification.objects.create(family_id=family_id, text=text)
+
+
+@transaction.atomic
+def sync_low_balance_notice(child_id):
+    """Send one reminder per period with exactly one available lesson."""
+    child = Child.objects.select_for_update().get(pk=child_id)
+    today = timezone.localdate()
+    balance = LessonEntry.objects.filter(
+        subscription__invoice__child=child,
+        subscription__starts_on__lte=today,
+        subscription__expires_on__gte=today,
+    ).aggregate(total=Sum("delta"))["total"] or 0
+    low_balance = child.family.active and balance == 1
+    if child.low_balance_notified == low_balance:
+        return
+    if low_balance:
+        family_notice(child.family_id, f"{child.name} · осталось одно занятие. Можно продлить абонемент.")
+    child.low_balance_notified = low_balance
+    child.save(update_fields=["low_balance_notified"])
 
 
 def lesson_notice(lesson, text):
@@ -86,7 +106,9 @@ def book_locked(actor, lesson, child):
 def book(actor, data):
     lesson = Lesson.objects.select_for_update().get(pk=data["lesson"].pk)
     child = Child.objects.select_for_update().get(pk=data["child"].pk)
-    return book_locked(actor, lesson, child)
+    booking = book_locked(actor, lesson, child)
+    sync_low_balance_notice(child.pk)
+    return booking
 
 
 @transaction.atomic
@@ -130,6 +152,7 @@ def mark(actor, data):
     audit(actor, f"{booking.child.name} — {booking.get_attendance_display()}",
           before, {"attendance": attendance}, reason)
     family_notice(booking.child.family_id, f"{booking.child.name} · {lesson.title} · {booking.get_attendance_display()}")
+    sync_low_balance_notice(booking.child_id)
 
 
 @transaction.atomic
@@ -144,6 +167,8 @@ def cancel(actor, data):
         booking.status, booking.attendance = "cancelled", "cancelled"
         booking.cancellation_charge_pending = False
         booking.save(update_fields=["status", "attendance", "cancellation_charge_pending"])
+    for child_id in {booking.child_id for booking in bookings}:
+        sync_low_balance_notice(child_id)
     lesson_notice(lesson, f"Занятие «{lesson.title}» отменено мастером. Причина — {data['reason']}")
     lesson.status = "cancelled"
     lesson.save(update_fields=["status"])
@@ -166,6 +191,7 @@ def move(actor, data):
     booking.status, booking.attendance = "cancelled", "cancelled"
     booking.save(update_fields=["status", "attendance"])
     audit(actor, f"{child.name} — запись перенесена", reason=data["reason"])
+    sync_low_balance_notice(child.pk)
 
 
 @transaction.atomic
@@ -195,6 +221,7 @@ def pay(actor, data):
     LessonEntry.objects.create(subscription=subscription, delta=plan.lessons, reason="Оплачен абонемент")
     audit(actor, f"{child.name} — оплата {payment.amount} ₽, начислено {plan.lessons} зан.")
     family_notice(child.family_id, f"Получена оплата за {child.name}. Начислено {plan.lessons} занятий.")
+    sync_low_balance_notice(child.pk)
     return payment
 
 

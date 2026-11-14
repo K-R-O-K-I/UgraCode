@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase
 from django.utils import timezone
 from . import services
-from .models import Booking, Child, Lesson, LessonEntry, LessonPolicy, Payment, Subscription
+from .models import Booking, Child, Lesson, LessonEntry, LessonPolicy, Notification, Payment, Subscription
 
 
 class MasterDashboardTests(TestCase):
@@ -49,6 +49,28 @@ class MasterDashboardTests(TestCase):
         services.mark(self.master, {**payload, "attendance": "pending", "reason": "Исправление"})
         self.assertEqual(self.child.balance, 4)
         self.assertEqual(LessonEntry.objects.filter(booking=booking).count(), 2)
+
+    def test_one_lesson_notice_is_family_scoped_and_repeats_after_refill(self):
+        notes = Notification.objects.filter(
+            family=self.child.family, text__contains="осталось одно занятие",
+        )
+        subscription = Subscription.objects.get(invoice__child=self.child)
+        LessonEntry.objects.filter(subscription=subscription).update(delta=2)
+        booking = Booking.objects.get(lesson=self.lesson, child=self.child)
+        payload = {"booking": booking, "attendance": "present"}
+        services.mark(self.master, payload)
+        services.mark(self.master, payload)
+        services.sync_low_balance_notice(self.child.pk)
+        self.assertEqual(notes.count(), 1)
+        self.assertIn(self.child.name, notes.get().text)
+        self.assertIsNone(notes.get().read_at)
+        self.assertFalse(Notification.objects.filter(
+            text__contains=f"{self.child.name} · осталось одно занятие",
+        ).exclude(family=self.child.family).exists())
+
+        services.mark(self.master, {**payload, "attendance": "pending", "reason": "Исправление"})
+        services.mark(self.master, payload)
+        self.assertEqual(notes.count(), 2)
 
     def test_failed_attendance_rolls_back(self):
         booking = Booking.objects.filter(lesson=self.lesson, child=self.child).get()

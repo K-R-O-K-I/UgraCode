@@ -77,6 +77,7 @@ def parent_cancel(family, booking, reason):
     master.audit(ParentActor(family), f"{child.name} — запись отменена родителем", reason=reason)
     Notification.objects.create(text=f"{child.name} · отмена «{lesson.title}». Причина — {reason}")
     master.family_notice(family.pk, f"Запись на «{lesson.title}» для {child.name} отменена.")
+    master.sync_low_balance_notice(child.pk)
 
 
 @transaction.atomic
@@ -138,15 +139,18 @@ def create_booking_checkout(family, child, lesson):
 
 @transaction.atomic
 def complete(checkout_id):
-    checkout = Checkout.objects.select_for_update().select_related("invoice__child").get(pk=checkout_id)
+    checkout = Checkout.objects.select_for_update().get(pk=checkout_id)
     invoice = Invoice.objects.select_for_update().get(pk=checkout.invoice_id)
     if checkout.status == "succeeded":
         return
     if checkout.status != "pending" or invoice.status != "open":
         raise ValidationError("Этот платёж уже отменён.")
-    child = invoice.child
+    lesson = None
     if checkout.lesson_id:
-        master.book(ParentActor(child.family), {"lesson": checkout.lesson, "child": child})
+        lesson = Lesson.objects.select_for_update().get(pk=checkout.lesson_id)
+    child = Child.objects.select_for_update().get(pk=invoice.child_id)
+    if lesson is not None:
+        master.book_locked(ParentActor(child.family), lesson, child)
     Payment.objects.create(invoice=invoice, method=checkout.provider, amount=invoice.amount, operation_key=checkout.pk)
     day = timezone.localdate()
     subscription = Subscription.objects.create(invoice=invoice, starts_on=day, expires_on=day+timedelta(days=invoice.validity_days-1))
@@ -155,9 +159,9 @@ def complete(checkout_id):
     invoice.save(update_fields=["status"])
     checkout.status = "succeeded"
     checkout.save(update_fields=["status"])
-    child = checkout.invoice.child
     master.audit(ParentActor(child.family), f"{child.name} — оплачено {invoice.amount} ₽")
     master.family_notice(child.family_id, f"{child.name} · оплата подтверждена, начислено {invoice.lessons} занятий.")
+    master.sync_low_balance_notice(child.pk)
 
 
 @transaction.atomic

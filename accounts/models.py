@@ -28,6 +28,7 @@ class Child(models.Model):
     age = models.PositiveSmallIntegerField("Возраст", null=True, blank=True, validators=[MaxValueValidator(100)])
     description = models.TextField("Описание", blank=True, max_length=2000)
     avatar = models.ImageField("Аватарка", upload_to=avatar_path, blank=True)
+    low_balance_notified = models.BooleanField(default=False, editable=False)
 
     class Meta:
         verbose_name = "ребёнок"
