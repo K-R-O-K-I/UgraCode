@@ -42,6 +42,7 @@
 <div class="panel-body">
 {% for booking in selected.bookings.all %}
 <div class="student-row"><div class="student-info"><span class="avatar">{{ booking.child.initials }}</span><div><div class="student-name">{{ booking.child.name }}</div><div class="student-balance">Остаток {{ booking.child.balance }} зан. {% if booking.status == 'cancelled' %}· запись отменена{% endif %}</div></div></div>
+{% if booking.parent_reason %}<p class="parent-note">Родитель — {{ booking.parent_reason }}</p>{% endif %}{% if booking.cancellation_charge_pending %}<p class="parent-note">Поздняя отмена без абонемента · требуется решение мастера</p>{% endif %}
 {% if booking.status == "booked" and selected.status == "scheduled" %}
 <div class="attendance-actions">
 <a class="{% if booking.attendance == 'present' %}is-present{% endif %}" href="{% url 'operation' 'attendance' %}?booking={{ booking.pk }}&value=present" aria-label="{{ booking.child.name }} — был">Был</a>
@@ -60,6 +61,7 @@
 </div>
 {% elif page == "children" %}
 <div class="heading-row"><div><h1>Ученики</h1><p class="subtext">Семьи и остатки абонементов</p></div><a class="primary" href="{% url 'operation' 'child' %}">+ Добавить ученика</a></div>
+<div class="toolbar"><a class="secondary" href="/family/manage/">Семьи и ссылки доступа</a></div>
 <form class="toolbar" method="get"><input type="hidden" name="page" value="children"><input name="q" value="{{ query }}" placeholder="Ребёнок или родитель" aria-label="Поиск учеников"><button class="secondary">Найти</button><a class="secondary" href="{% url 'export' 'children' %}">Скачать CSV</a></form>
 <div class="table-wrap"><table><thead><tr><th>Ученик</th><th>Родитель</th><th>Остаток</th><th></th></tr></thead><tbody>
 {% for child in children %}<tr><td><strong>{{ child.name }}</strong></td><td>{{ child.family.contact_name }}</td><td><span class="badge {% if child.balance <= 1 %}warning{% endif %}">{{ child.balance }} зан.</span></td><td><a class="text-button" href="{% url 'operation' 'payment' %}?child={{ child.pk }}">Внести оплату</a></td></tr>{% empty %}<tr><td colspan="4">Ученики не найдены</td></tr>{% endfor %}

@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<div class="heading-row"><div><h1>{% if family %}{{ family.contact_name }}{% else %}Семьи{% endif %}</h1><p class="subtext">Контакты родителей и доступ к семейному кабинету</p></div><a class="secondary" href="/?page=children">К ученикам</a></div>
+{% if family %}
+<a href="/family/manage/" class="text-button back-link">← Все семьи</a>
+{% endif %}
+<form method="post" class="settings-card">{% csrf_token %}{{ form.non_field_errors }}<h2>{% if family %}Данные родителя{% else %}Создать семью{% endif %}</h2><div class="form-grid" style="margin-top:20px">{% for field in form %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}</div><div class="form-actions"><button class="primary">Сохранить семью</button></div></form>
+{% if family %}
+<section class="settings-card" style="margin-top:20px"><h2>Ссылка для родителя</h2><p class="form-note">Родитель входит по ссылке и видит детей своей семьи. Новая ссылка заменяет предыдущую.</p>{% for link in access_links %}<p class="subtext">Действует до {{ link.expires_at|date:"d.m.Y" }}</p>{% empty %}<p class="subtext">Активной ссылки нет</p>{% endfor %}
+<form method="post" action="{% url 'family-access-action' family.pk %}">{% csrf_token %}<div class="form-actions"><button name="action" value="revoke" class="secondary">Отозвать доступ</button><button name="action" value="issue" class="primary">Выдать новую ссылку</button></div></form></section>
+<section class="settings-card" style="margin-top:20px"><h2>Дети семьи</h2>{% for child in family.children.all %}<div class="history-row">{{ child.name }} · {{ child.balance }} зан.</div>{% empty %}<p class="subtext">Родитель сможет добавить детей после входа.</p>{% endfor %}</section>
+{% else %}
+<div class="table-wrap" style="margin-top:25px"><table><thead><tr><th>Родитель</th><th>Телефон</th><th>Дети</th><th></th></tr></thead><tbody>{% for item in families %}<tr><td>{{ item.contact_name }}</td><td>{{ item.phone|default:"—" }}</td><td>{% for child in item.children.all %}{{ child.name }}{% if not forloop.last %}, {% endif %}{% empty %}Пока нет детей{% endfor %}</td><td><a class="text-button" href="{% url 'family-manage-detail' item.pk %}">Открыть</a></td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+{% endblock %}

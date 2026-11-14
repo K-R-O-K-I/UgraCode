@@ -36,7 +36,7 @@ def base_context(request, page="schedule"):
     return {
         "page": page, "nav": PAGES,
         "page_title": dict((key, name) for key, name, _ in PAGES).get(page, "Мастерская"),
-        "unread": Notification.objects.filter(read_at__isnull=True).count(),
+        "unread": Notification.objects.filter(family__isnull=True, read_at__isnull=True).count(),
     }
 
 
@@ -82,12 +82,12 @@ def home(request):
         "lessons": lessons, "selected": selected, "query": query, "kind": kind,
         "counts": counts, "children": children, "low_balance": [child for child in children if child.balance <= 1][:3],
         "payments": Payment.objects.select_related("invoice__child").prefetch_related("receipts"),
-        "audit": AuditEvent.objects.all()[:200], "notifications": Notification.objects.all()[:100],
+        "audit": AuditEvent.objects.all()[:200], "notifications": Notification.objects.filter(family__isnull=True)[:100],
     })
     if request.method == "POST":
         if page != "notifications":
             return HttpResponse(status=405)
-        Notification.objects.filter(read_at__isnull=True).update(read_at=timezone.now())
+        Notification.objects.filter(family__isnull=True, read_at__isnull=True).update(read_at=timezone.now())
         messages.success(request, "Уведомления отмечены прочитанными.")
         return redirect("/?page=notifications")
     return render(request, "dashboard/home.html", context)

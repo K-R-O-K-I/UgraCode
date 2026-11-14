@@ -6,7 +6,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from PIL import Image
-from .models import Booking, Child, Lesson, Payment
+from .models import Booking, Child, Family, Lesson, Payment
 
 
 class LessonForm(forms.Form):
@@ -26,11 +26,11 @@ class LessonForm(forms.Form):
 
 
 class BookingForm(forms.Form):
-    lesson = forms.ModelChoiceField(label="Занятие", queryset=Lesson.objects.filter(status="scheduled", ends_at__gt=timezone.now()))
+    lesson = forms.ModelChoiceField(label="Занятие", queryset=Lesson.objects.filter(status="scheduled", starts_at__gt=timezone.now()))
     child = forms.ModelChoiceField(label="Ученик", queryset=Child.objects.filter(active=True))
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["lesson"].queryset = Lesson.objects.filter(status="scheduled", ends_at__gt=timezone.now())
+        self.fields["lesson"].queryset = Lesson.objects.filter(status="scheduled", starts_at__gt=timezone.now())
 
 
 class AttendanceForm(forms.Form):
@@ -52,13 +52,20 @@ class MoveForm(BookingForm):
 
 class ChildForm(forms.Form):
     name = forms.CharField(label="Имя и фамилия ребёнка", max_length=160)
-    parent = forms.CharField(label="Имя родителя", max_length=160)
+    family = forms.ModelChoiceField(label="Существующая семья", queryset=Family.objects.all(), required=False)
+    parent = forms.CharField(label="Или имя родителя новой семьи", max_length=160, required=False)
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("family") and not data.get("parent"):
+            raise ValidationError("Выберите семью или укажите имя родителя.")
+        return data
 
 
 class PaymentForm(forms.Form):
     child = forms.ModelChoiceField(label="Ученик", queryset=Child.objects.filter(active=True))
     amount = forms.DecimalField(label="Получено, ₽", max_digits=12, decimal_places=2, min_value=Decimal("0.01"), initial=4800)
-    method = forms.ChoiceField(label="Способ оплаты", choices=Payment._meta.get_field("method").choices)
+    method = forms.ChoiceField(label="Способ оплаты", choices=[("cash", "Наличные"), ("transfer", "Перевод")])
     lessons = forms.IntegerField(label="Количество занятий", min_value=1, max_value=100, initial=4)
     validity_days = forms.IntegerField(label="Срок действия, дней", min_value=1, max_value=365, initial=30)
     operation_key = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)

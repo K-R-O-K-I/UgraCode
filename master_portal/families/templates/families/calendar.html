@@ -1,0 +1,9 @@
+<section class="mini-calendar panel">
+<div class="month-heading"><h2>{{ selected_day|date:"F Y" }}</h2><div><a href="/family/?page=calendar&date={{ previous_month|date:'Y-m-d' }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}" aria-label="Предыдущий месяц">‹</a><a href="/family/?page=calendar&date={{ next_month|date:'Y-m-d' }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}" aria-label="Следующий месяц">›</a></div></div>
+<div class="calendar-weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+<div class="month-grid">
+{% for day in calendar_days %}
+<a href="/family/?page=calendar&date={{ day.value|date:'Y-m-d' }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}" class="{% if not day.in_month %}outside{% endif %} {% if day.value == selected_day %}selected{% endif %} {% if day.value == today %}today{% endif %}" aria-label="{{ day.value|date:'j E' }}{% if day.marked %}, есть запись{% endif %}"><span>{{ day.value|date:"j" }}</span>{% if day.marked %}<i></i>{% endif %}</a>
+{% endfor %}
+</div><p class="calendar-legend"><i></i> Вы записаны на занятие</p>
+</section>

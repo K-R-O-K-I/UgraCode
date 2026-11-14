@@ -9,7 +9,7 @@ if not DEBUG and SECRET_KEY.startswith("local-preview"):
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,[::1]").split(",")
 INSTALLED_APPS = [
     "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions",
-    "django.contrib.messages", "django.contrib.staticfiles", "dashboard",
+    "django.contrib.messages", "django.contrib.staticfiles", "dashboard", "families",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware",
@@ -27,7 +27,7 @@ TEMPLATES = [{
         "django.contrib.messages.context_processors.messages",
     ]},
 }]
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "demo.sqlite3"}}
+DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": Path(os.getenv("SQLITE_PATH", BASE_DIR / "demo.sqlite3"))}}
 if os.getenv("POSTGRES_DB"):
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.postgresql",
@@ -50,3 +50,18 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+PAYMENT_MODE = os.getenv("PAYMENT_MODE", "demo" if DEBUG else "disabled")
+YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID", "")
+YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY", "")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
+SECURE_REFERRER_POLICY = "same-origin"
+LOGGING = {
+    "version": 1, "disable_existing_loggers": False,
+    "filters": {"hide_links": {"()": "families.security.HideAccessLinks"}},
+    "handlers": {"server": {"class": "logging.StreamHandler", "filters": ["hide_links"]}},
+    "loggers": {
+        "django.server": {"handlers": ["server"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["server"], "level": "WARNING", "propagate": False},
+    },
+}

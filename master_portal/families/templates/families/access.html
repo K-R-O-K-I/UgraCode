@@ -1,0 +1,3 @@
+{% load static %}
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Семейный кабинет · Ясна</title><link rel="stylesheet" href="{% static 'dashboard/styles.css' %}"></head>
+<body class="login-page"><main class="login-card"><div class="brand"><span class="brand-mark">я</span><span>ясна</span></div><h1>{% if left %}Вы вышли из кабинета{% else %}Нужна ссылка от мастера{% endif %}</h1><p class="subtext">{% if left %}Вернуться можно по вашей персональной ссылке.{% else %}Эта ссылка недействительна или срок доступа закончился. Попросите мастера выдать новую ссылку для вашей семьи.{% endif %}</p></main></body></html>

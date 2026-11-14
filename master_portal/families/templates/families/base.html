@@ -1,0 +1,24 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#eceee5">
+<title>Ясна · семейный кабинет</title>
+<link rel="stylesheet" href="{% static 'dashboard/styles.css' %}">
+<link rel="stylesheet" href="{% static 'families/family.css' %}">
+</head>
+<body class="family-app">
+<a class="skip-link" href="#content">Перейти к содержимому</a>
+<aside class="sidebar">
+<a class="brand" href="{% url 'family-home' %}"><span class="brand-mark">я</span><span>ясна<span class="brand-caption">мастерская и школа труда</span></span></a>
+<div class="workspace-label">СЕМЕЙНЫЙ КАБИНЕТ</div>
+<nav aria-label="Разделы семьи">{% for key, label, icon in family_nav %}<a href="/family/?page={{ key }}" class="{% if page == key %}active{% endif %}" {% if page == key %}aria-current="page"{% endif %}>{% include "dashboard/icon.html" with key=icon %}<span class="nav-label">{{ label }}</span></a>{% endfor %}</nav>
+<div class="sidebar-bottom"><div class="workshop-address">Ясна<br><span>Столярная мастерская · Сургут</span></div><div class="profile"><span class="avatar">{{ family.contact_name|first }}</span><span><strong>{{ family.contact_name }}</strong><small>Родитель</small></span><form action="{% url 'family-leave' %}" method="post">{% csrf_token %}<button aria-label="Выйти из семейного кабинета">↗</button></form></div></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><span class="breadcrumbs">Ясна <span>/</span> Семейный кабинет</span><div class="topbar-actions"><span class="parent-contact">{{ family.contact_name }}</span><a class="icon-button" href="/family/?page=notifications" aria-label="Уведомления">{% include "dashboard/icon.html" with key="bell" %}{% if unread %}<span class="notification-dot"></span>{% endif %}</a><form class="mobile-family-exit" action="{% url 'family-leave' %}" method="post">{% csrf_token %}<button class="text-button">Выйти</button></form></div></header>
+<main id="content">{% for message in messages %}<div class="flash" role="status">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+<footer>Ясна · мастерская и школа труда <span>Сургут</span></footer>
+</div>
+</body>
+</html>

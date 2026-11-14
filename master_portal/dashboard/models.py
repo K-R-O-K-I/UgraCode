@@ -61,6 +61,8 @@ class Lesson(models.Model):
 
 
 class Booking(models.Model):
+    parent_reason = models.TextField(blank=True)
+    cancellation_charge_pending = models.BooleanField(default=False)
     ATTENDANCE = [("pending", "Без отметки"), ("present", "Посетил"), ("absent", "Пропустил"), ("cancelled", "Отмена")]
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="bookings")
     child = models.ForeignKey(Child, on_delete=models.PROTECT)
@@ -73,6 +75,10 @@ class Booking(models.Model):
 
 
 class PassPlan(models.Model):
+    public = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} · {self.price} ₽"
     name = models.CharField(max_length=120)
     lessons = models.PositiveIntegerField()
     validity_days = models.PositiveIntegerField()
@@ -90,7 +96,7 @@ class Invoice(models.Model):
 
 class Payment(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT)
-    method = models.CharField(max_length=16, choices=[("cash", "Наличные"), ("transfer", "Перевод")])
+    method = models.CharField(max_length=16, choices=[("cash", "Наличные"), ("transfer", "Перевод"), ("demo", "Тестовая оплата"), ("yookassa", "ЮKassa")])
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     operation_key = models.UUIDField(unique=True, default=uuid.uuid4)
     confirmed_at = models.DateTimeField(default=timezone.now)
@@ -140,6 +146,7 @@ class AuditEvent(models.Model):
 
 
 class Notification(models.Model):
+    family = models.ForeignKey(Family, null=True, blank=True, on_delete=models.PROTECT)
     text = models.CharField(max_length=500)
     read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

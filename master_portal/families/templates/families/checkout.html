@@ -1,0 +1,16 @@
+{% extends "families/base.html" %}
+{% block content %}
+<a class="text-button back-link" href="/family/?page=payments">← Оплаты и чеки</a>
+<div class="heading-row"><h1>{% if checkout.status == "succeeded" %}Оплата подтверждена{% elif checkout.status == "cancelled" %}Оплата отменена{% else %}Оплата абонемента{% endif %}</h1></div>
+<section class="settings-card checkout-card"><p class="eyebrow">{{ checkout.invoice.child.name }}</p><h2>{{ checkout.invoice.lessons }} занятий</h2><p>Срок действия — {{ checkout.invoice.validity_days }} дней с оплаты</p><strong class="checkout-amount">{{ checkout.invoice.amount }} ₽</strong>
+{% if checkout.provider == "demo" %}<p class="payment-note">Тестовая оплата. Деньги не списываются, банковские данные не нужны.</p>{% endif %}
+{% if error %}<p class="modal-error" role="alert">{{ error }}</p>{% endif %}
+{% if checkout.status == "pending" %}
+<form method="post">{% csrf_token %}<div class="form-actions">
+{% if checkout.provider == "demo" %}<button name="action" value="cancel" class="secondary">Отменить оплату</button><button name="action" value="confirm" class="primary">Подтвердить тестовую оплату</button>
+{% else %}<button name="action" value="start" class="primary">Оплатить через ЮKassa</button>{% if checkout.provider_id %}<button name="action" value="verify" class="secondary">Проверить оплату</button>{% endif %}{% endif %}
+</div></form>
+{% elif checkout.status == "succeeded" %}<p>Занятия начислены ребёнку. Чек появится в кабинете после прикрепления мастером.</p><a class="primary" href="/family/?page=children">К абонементам</a>
+{% else %}<p>Занятия по этому счёту не начислялись.</p><a class="primary" href="{% url 'family-operation' 'buy' %}?child={{ checkout.invoice.child_id }}">Выбрать абонемент</a>{% endif %}
+</section>
+{% endblock %}

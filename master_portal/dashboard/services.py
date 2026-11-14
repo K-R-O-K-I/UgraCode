@@ -15,6 +15,16 @@ def audit(actor, text, before=None, after=None, reason=""):
     )
 
 
+def family_notice(family_id, text):
+    Notification.objects.create(family_id=family_id, text=text)
+
+
+def lesson_notice(lesson, text):
+    family_ids = lesson.bookings.values_list("child__family_id", flat=True).distinct()
+    for family_id in family_ids:
+        family_notice(family_id, text)
+
+
 def restore(booking):
     charges = LessonEntry.objects.filter(booking=booking, delta__lt=0, reversal__isnull=True)
     for charge in charges:
@@ -42,11 +52,13 @@ def save_lesson(actor, data, pk=None):
     lesson.save()
     audit(actor, f"Сохранено занятие «{lesson.title}»")
     Notification.objects.create(text=f"Обновлено расписание · {lesson.title}")
+    if pk:
+        lesson_notice(lesson, f"Изменено занятие «{lesson.title}». Проверьте расписание.")
     return lesson
 
 
 def book_locked(actor, lesson, child):
-    if lesson.status != "scheduled" or lesson.ends_at <= timezone.now():
+    if lesson.status != "scheduled" or lesson.starts_at <= timezone.now():
         raise ValidationError("Занятие отменено или уже завершилось.")
     if not child.active:
         raise ValidationError("Ученик неактивен.")
@@ -58,12 +70,15 @@ def book_locked(actor, lesson, child):
     if old:
         restore(old)
         old.status, old.attendance = "booked", "pending"
-        old.save(update_fields=["status", "attendance"])
+        old.parent_reason = ""
+        old.cancellation_charge_pending = False
+        old.save(update_fields=["status", "attendance", "parent_reason", "cancellation_charge_pending"])
         booking = old
     else:
         booking = Booking.objects.create(lesson=lesson, child=child)
     audit(actor, f"{child.name} — запись на «{lesson.title}»")
     Notification.objects.create(text=f"{child.name} записан на «{lesson.title}»")
+    family_notice(child.family_id, f"{child.name} записан на «{lesson.title}».")
     return booking
 
 
@@ -114,6 +129,7 @@ def mark(actor, data):
     booking.save(update_fields=["attendance", "status"])
     audit(actor, f"{booking.child.name} — {booking.get_attendance_display()}",
           before, {"attendance": attendance}, reason)
+    family_notice(booking.child.family_id, f"{booking.child.name} · {lesson.title} · {booking.get_attendance_display()}")
 
 
 @transaction.atomic
@@ -126,7 +142,9 @@ def cancel(actor, data):
     for booking in bookings:
         restore(booking)
         booking.status, booking.attendance = "cancelled", "cancelled"
-        booking.save(update_fields=["status", "attendance"])
+        booking.cancellation_charge_pending = False
+        booking.save(update_fields=["status", "attendance", "cancellation_charge_pending"])
+    lesson_notice(lesson, f"Занятие «{lesson.title}» отменено мастером. Причина — {data['reason']}")
     lesson.status = "cancelled"
     lesson.save(update_fields=["status"])
     audit(actor, f"Отменено занятие «{lesson.title}»", reason=data["reason"])
@@ -152,7 +170,7 @@ def move(actor, data):
 
 @transaction.atomic
 def add_child(actor, data):
-    family = Family.objects.create(contact_name=data["parent"])
+    family = data.get("family") or Family.objects.create(contact_name=data["parent"])
     child = Child.objects.create(family=family, name=data["name"])
     audit(actor, f"Добавлен ученик {child.name}")
     return child
@@ -184,6 +202,7 @@ def pay(actor, data):
     subscription = Subscription.objects.create(invoice=invoice, starts_on=today, expires_on=today + timedelta(days=plan.validity_days - 1))
     LessonEntry.objects.create(subscription=subscription, delta=plan.lessons, reason="Оплачен абонемент")
     audit(actor, f"{child.name} — оплата {payment.amount} ₽, начислено {plan.lessons} зан.")
+    family_notice(child.family_id, f"Получена оплата за {child.name}. Начислено {plan.lessons} занятий.")
     return payment
 
 
@@ -193,6 +212,7 @@ def attach_receipt(actor, data):
         file=data.get("file") or "",
     )
     audit(actor, "Прикреплён чек", after={"payment": receipt.payment_id})
+    family_notice(receipt.payment.invoice.child.family_id, "Мастер прикрепил чек к оплате. Он доступен в разделе «Оплаты».")
     return receipt
 
 

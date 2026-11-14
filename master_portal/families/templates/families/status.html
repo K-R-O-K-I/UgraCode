@@ -1,0 +1,6 @@
+{% if booking.lesson.status == "cancelled" %}<span class="status-label cancelled">Занятие отменено</span>
+{% elif booking.status == "cancelled" %}<span class="status-label cancelled">Запись отменена</span>
+{% elif booking.attendance == "present" %}<span class="status-label present">Пришёл</span>
+{% elif booking.attendance == "absent" %}<span class="status-label absent">Не пришёл</span>
+{% elif booking.lesson.ends_at < now %}<span class="status-label">Ожидаем отметку мастера</span>
+{% else %}<span class="status-label booked">Вы записаны</span>{% endif %}

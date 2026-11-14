@@ -1,0 +1,5 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<div class="heading-row"><h1>Ссылка для {{ family.contact_name }}</h1></div>
+<section class="settings-card"><label for="personal-link">Скопируйте и передайте родителю</label><textarea id="personal-link" readonly rows="3" style="width:100%;margin-top:12px">{{ personal_url }}</textarea><p class="form-note">По этой ссылке доступна информация всей семьи. Сохраните её сейчас. Для повторной выдачи можно создать новую ссылку.</p><div class="form-actions"><a class="secondary" href="{% url 'family-manage-detail' family.pk %}">К семье</a><a class="primary" href="{{ personal_url }}" target="_blank" rel="noreferrer">Открыть кабинет</a></div></section>
+{% endblock %}
