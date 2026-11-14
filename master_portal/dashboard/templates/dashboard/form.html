@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<a class="text-button back-link" href="/">← В расписание</a>
+<div class="heading-row"><div><h1>{{ title }}</h1>{% if booking %}<p class="subtext">{{ booking.child.name }} · {{ booking.lesson.title }}</p>{% endif %}</div></div>
+<form method="post" enctype="multipart/form-data" class="settings-card operation-form">
+{% csrf_token %}
+{% for field in form.hidden_fields %}{{ field }}{{ field.errors }}{% endfor %}
+{% if form.non_field_errors %}<div class="modal-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<div class="form-grid">
+{% for field in form.visible_fields %}
+<div class="form-field {% if field.name == 'description' or field.name == 'reason' or field.name == 'title' %}full{% endif %}">
+<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}
+</div>
+{% endfor %}
+</div>
+{% if operation == "attendance" %}<p class="form-note">Повторная отметка не списывает занятие второй раз. Для исправления укажите причину.</p>{% endif %}
+{% if operation == "cancel" %}<p class="form-note">Записи будут отменены, списанные занятия вернутся на абонементы.</p>{% endif %}
+{% if operation == "payment" %}<p class="form-note">Подтвердите оплату, которую вы уже получили. После сохранения ученику начислятся занятия.</p>{% endif %}
+{% if operation == "receipt" %}<p class="form-note">Прикрепите чек, сформированный в «Мой налог».</p>{% endif %}
+<div class="form-actions"><a class="secondary" href="/">Отмена</a><button type="submit" class="{% if operation == 'cancel' %}danger{% else %}primary{% endif %}">{% if operation == "cancel" %}Отменить занятие{% else %}Сохранить{% endif %}</button></div>
+</form>
+{% endblock %}

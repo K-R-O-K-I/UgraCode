@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#eceee5">
+<title>{% block title %}Ясна · кабинет мастера{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'dashboard/styles.css' %}">
+</head>
+<body>
+<a class="skip-link" href="#content">Перейти к содержимому</a>
+<aside class="sidebar">
+<a href="/" class="brand" aria-label="Ясна — расписание"><span class="brand-mark">я</span><span>ясна<span class="brand-caption">мастерская и школа труда</span></span></a>
+<div class="workspace-label">КАБИНЕТ МАСТЕРА</div>
+<nav aria-label="Основная навигация">
+{% for key, name, symbol in nav %}
+<a href="/?page={{ key }}" class="{% if page == key %}active{% endif %}" {% if page == key %}aria-current="page"{% endif %}>{% include "dashboard/icon.html" with key=key %}<span class="nav-label">{{ name }}</span></a>
+{% endfor %}
+</nav>
+<div class="sidebar-bottom">
+<div class="workshop-address">Ясна<br><span>Столярная мастерская · Сургут</span></div>
+<div class="profile"><span class="avatar">ДА</span><span><strong>{{ user.get_full_name|default:user.username }}</strong><small>Мастер</small></span>
+<form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="profile-arrow" aria-label="Выйти из кабинета">↗</button></form></div>
+</div>
+</aside>
+<div class="workspace">
+<header class="topbar"><div class="breadcrumbs">Мастерская <span>/</span> <strong>{{ page_title }}</strong></div><div class="topbar-actions"><span class="location-label">Сургут</span><a href="/?page=notifications" class="icon-button" aria-label="Уведомления">{% include "dashboard/icon.html" with key="bell" %}{% if unread %}<span class="notification-dot"></span>{% endif %}</a><span class="avatar small">ДА</span></div></header>
+<main id="content" tabindex="-1">
+{% for message in messages %}<div class="flash" role="status">{{ message }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</main>
+<footer>Ясна · столярная мастерская <a href="/?page=history">История действий</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block content %}
+{% if page == "schedule" or page == "journal" %}
+<div class="heading-row"><div><p class="eyebrow">{{ day|date:"l, j E Y" }}</p><h1>{% if page == "journal" %}Журнал посещений{% else %}Сегодня в мастерской{% endif %}</h1><p class="subtext">{{ user.first_name|default:"Денис" }}, ваши занятия и записи на день</p></div><a class="primary" href="{% url 'operation' 'lesson' %}"><span class="plus-sign">+</span> Создать занятие</a></div>
+{% if page == "schedule" %}
+<section class="hero">
+<div class="hero-copy"><p class="eyebrow">Выбрано в расписании</p><h2>{% if selected %}{{ selected.title }}{% else %}Свободный день{% endif %}</h2>{% if selected %}<p>{{ selected.starts_at|date:"H:i" }}–{{ selected.ends_at|date:"H:i" }} · {{ selected.get_kind_display }} занятие</p><a class="text-button hero-action" href="#journal-panel">Открыть журнал ↗</a>{% else %}<p>Добавьте занятие в расписание.</p>{% endif %}</div>
+<div class="hero-photo" role="img" aria-label="Верстак со столярными инструментами"></div>
+</section>
+<div class="stats">
+<div class="stat"><div><div class="stat-label">Занятий</div><div class="stat-value">{{ counts.lessons }}</div><div class="stat-note">в выбранный день</div></div><span class="stat-icon">{% include "dashboard/icon.html" with key="schedule" %}</span></div>
+<div class="stat"><div><div class="stat-label">Записей</div><div class="stat-value">{{ counts.bookings }}</div><div class="stat-note">ждём в мастерской</div></div><span class="stat-icon">{% include "dashboard/icon.html" with key="children" %}</span></div>
+<div class="stat"><div><div class="stat-label">Свободных мест</div><div class="stat-value">{{ counts.places }}</div><div class="stat-note">можно записать ещё</div></div><span class="stat-icon">{% include "dashboard/icon.html" with key="journal" %}</span></div>
+<div class="stat"><div><div class="stat-label">Оплачено</div><div class="stat-value">{{ counts.paid|floatformat:"0" }} ₽</div><div class="stat-note">за выбранный день</div></div><span class="stat-icon">{% include "dashboard/icon.html" with key="payments" %}</span></div>
+</div>
+{% endif %}
+<div class="section-top calendar-heading"><h2>{{ day|date:"j E" }}</h2><form class="calendar-control" method="get"><input type="hidden" name="page" value="{{ page }}"><a class="icon-button" href="?page={{ page }}&date={{ previous|date:'Y-m-d' }}" aria-label="Предыдущая неделя">‹</a><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" aria-label="Дата расписания"><button class="secondary compact">Показать</button><a class="icon-button" href="?page={{ page }}&date={{ following|date:'Y-m-d' }}" aria-label="Следующая неделя">›</a></form></div>
+<div class="day-strip">
+{% for item in week %}<a class="day {% if item.date == day %}active{% endif %}" href="?page={{ page }}&date={{ item.date|date:'Y-m-d' }}" {% if item.date == day %}aria-current="date"{% endif %}><span>{{ item.date|date:"D" }}</span><strong>{{ item.date|date:"j" }}</strong><i class="dot {% if not item.has_lessons %}invisible{% endif %}"></i></a>{% endfor %}
+</div>
+<div class="main-grid">
+<section class="lesson-section">
+<div class="filter-row"><div class="pills">
+<a href="?page={{ page }}&date={{ day|date:'Y-m-d' }}" class="pill {% if not kind %}active{% endif %}">Все занятия</a>
+<a href="?page={{ page }}&date={{ day|date:'Y-m-d' }}&kind=group" class="pill {% if kind == 'group' %}active{% endif %}">Групповые</a>
+<a href="?page={{ page }}&date={{ day|date:'Y-m-d' }}&kind=individual" class="pill {% if kind == 'individual' %}active{% endif %}">Индивидуальные</a></div>
+</div>
+{% for lesson in lessons %}
+<article class="lesson-card {% if lesson == selected %}selected{% endif %} {% if lesson.status == 'cancelled' %}cancelled{% endif %}">
+<div class="lesson-time">{{ lesson.starts_at|date:"H:i" }}<small>{{ lesson.ends_at|date:"H:i" }}</small></div>
+<div><div class="lesson-kind">{{ lesson.get_kind_display }}</div><h3>{{ lesson.title }}</h3><div class="lesson-meta">{% if lesson.status == "cancelled" %}Отменено мастером{% else %}{{ lesson.remaining }} свободных мест{% endif %}</div></div>
+<img class="lesson-photo" src="{% static 'dashboard/assets/' %}{{ lesson.image }}" alt="Работа из мастерской Ясна">
+<div class="lesson-bottom"><div class="occupancy"><span class="mini-avatars">{% for booking in lesson.active_bookings|slice:":3" %}<span>{{ booking.child.initials }}</span>{% endfor %}</span>{{ lesson.active_bookings.count }} / {{ lesson.capacity }} мест</div><a href="?page={{ page }}&date={{ day|date:'Y-m-d' }}&lesson={{ lesson.pk }}#journal-panel" class="card-link">Журнал ↗</a><a href="{% url 'operation' 'lesson' %}?id={{ lesson.pk }}" class="card-link">Изменить</a></div>
+<details class="lesson-description"><summary>Задание и материалы</summary><p>{{ lesson.description|default:"Задание пока не добавлено."|linebreaksbr }}</p>{% if lesson.status == "scheduled" %}<div class="detail-actions"><a class="text-button" href="{% url 'operation' 'booking' %}?lesson={{ lesson.pk }}">Записать ребёнка</a><a class="muted-link" href="{% url 'operation' 'cancel' %}?lesson={{ lesson.pk }}">Отменить занятие</a></div>{% endif %}</details>
+</article>
+{% empty %}<div class="empty">В этот день занятий нет.</div>{% endfor %}
+</section>
+<aside class="right-column">
+<section class="panel" id="journal-panel">
+<div class="panel-head"><h2>Журнал посещений</h2><p class="subtext">{% if selected %}{{ selected.title }} · {{ selected.starts_at|date:"H:i" }}{% else %}Выберите занятие{% endif %}</p></div>
+<div class="panel-body">
+{% for booking in selected.bookings.all %}
+<div class="student-row"><div class="student-info"><span class="avatar">{{ booking.child.initials }}</span><div><div class="student-name">{{ booking.child.name }}</div><div class="student-balance">Остаток {{ booking.child.balance }} зан. {% if booking.status == 'cancelled' %}· запись отменена{% endif %}</div></div></div>
+{% if booking.status == "booked" and selected.status == "scheduled" %}
+<div class="attendance-actions">
+<a class="{% if booking.attendance == 'present' %}is-present{% endif %}" href="{% url 'operation' 'attendance' %}?booking={{ booking.pk }}&value=present" aria-label="{{ booking.child.name }} — был">Был</a>
+<a class="{% if booking.attendance == 'absent' %}is-absent{% endif %}" href="{% url 'operation' 'attendance' %}?booking={{ booking.pk }}&value=absent" aria-label="{{ booking.child.name }} — пропуск">Пропуск</a>
+<a class="{% if booking.attendance == 'cancelled' %}is-cancelled{% endif %}" href="{% url 'operation' 'attendance' %}?booking={{ booking.pk }}&value=cancelled" aria-label="{{ booking.child.name }} — отмена">Отмена</a>
+</div>
+{% if booking.attendance == "pending" %}<a class="card-link move-link" href="{% url 'operation' 'move' %}?booking={{ booking.pk }}">Перенести</a>{% else %}<a class="card-link move-link" href="{% url 'operation' 'attendance' %}?booking={{ booking.pk }}&value=pending">Исправить отметку</a>{% endif %}
+{% endif %}
+</div>
+{% empty %}<div class="empty">Записей пока нет.</div>{% endfor %}
+</div>
+{% if selected.status == "scheduled" %}<div class="panel-footer"><span>{{ selected.active_bookings.count }} записей</span><a class="text-button" href="{% url 'operation' 'booking' %}?lesson={{ selected.pk }}">+ Записать</a></div>{% endif %}
+</section>
+{% if low_balance %}<div class="note-panel"><div class="note-title">Заканчивается абонемент</div>{% for child in low_balance %}<p>{{ child.name }} · {{ child.balance }} зан.</p>{% endfor %}<a class="text-button" href="/?page=children">Открыть учеников ↗</a></div>{% endif %}
+</aside>
+</div>
+{% elif page == "children" %}
+<div class="heading-row"><div><h1>Ученики</h1><p class="subtext">Семьи и остатки абонементов</p></div><a class="primary" href="{% url 'operation' 'child' %}">+ Добавить ученика</a></div>
+<form class="toolbar" method="get"><input type="hidden" name="page" value="children"><input name="q" value="{{ query }}" placeholder="Ребёнок или родитель" aria-label="Поиск учеников"><button class="secondary">Найти</button><a class="secondary" href="{% url 'export' 'children' %}">Скачать CSV</a></form>
+<div class="table-wrap"><table><thead><tr><th>Ученик</th><th>Родитель</th><th>Остаток</th><th></th></tr></thead><tbody>
+{% for child in children %}<tr><td><strong>{{ child.name }}</strong></td><td>{{ child.family.contact_name }}</td><td><span class="badge {% if child.balance <= 1 %}warning{% endif %}">{{ child.balance }} зан.</span></td><td><a class="text-button" href="{% url 'operation' 'payment' %}?child={{ child.pk }}">Внести оплату</a></td></tr>{% empty %}<tr><td colspan="4">Ученики не найдены</td></tr>{% endfor %}
+</tbody></table></div>
+{% elif page == "payments" %}
+<div class="heading-row"><div><h1>Оплаты и чеки</h1><p class="subtext">Учёт полученных наличных и переводов</p></div><a class="primary" href="{% url 'operation' 'payment' %}">+ Внести оплату</a></div>
+<div class="toolbar"><a class="secondary" href="{% url 'export' 'payments' %}">Скачать CSV</a></div>
+<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Ученик</th><th>Получено</th><th>Способ</th><th>Чек</th></tr></thead><tbody>
+{% for payment in payments %}<tr><td>{{ payment.confirmed_at|date:"d.m.Y" }}</td><td>{{ payment.invoice.child.name }}<small>{{ payment.invoice.lessons }} занятий</small></td><td>{{ payment.amount }} ₽</td><td>{{ payment.get_method_display }}</td><td>{% for receipt in payment.receipts.all %}<a class="text-button" href="{% url 'receipt' receipt.pk %}">Открыть чек ↗</a><br>{% endfor %}<a class="text-button" href="{% url 'operation' 'receipt' %}?payment={{ payment.pk }}">Прикрепить</a></td></tr>{% empty %}<tr><td colspan="5">Оплат пока нет</td></tr>{% endfor %}
+</tbody></table></div>
+{% elif page == "history" %}
+<div class="heading-row"><div><h1>История изменений</h1><p class="subtext">Посещения, исправления и действия мастера</p></div><a class="secondary" href="{% url 'export' 'attendance' %}">Посещения CSV</a></div>
+<div class="panel">{% for event in audit %}<div class="history-row"><time>{{ event.created_at|date:"d.m.Y H:i" }} · {{ event.actor_label }}</time>{{ event.text }}{% if event.reason %}<p class="subtext">{{ event.reason }}</p>{% endif %}</div>{% empty %}<div class="empty">История пока пуста.</div>{% endfor %}</div>
+{% elif page == "settings" %}
+<div class="heading-row"><div><h1>Правила мастерской</h1><p class="subtext">Настройки списаний и отмен</p></div></div>
+<div class="settings-card"><h2>Правила новых занятий</h2><p class="form-note">Выберите срок бесплатной отмены и условия списания при пропуске. Для каждого занятия сохраняется своя версия правил.</p><div class="detail-actions"><a class="primary" href="{% url 'operation' 'policy' %}">Настроить правила</a></div></div>
+{% elif page == "notifications" %}
+<div class="heading-row"><h1>Уведомления</h1><form method="post">{% csrf_token %}<button class="secondary">Отметить прочитанными</button></form></div>
+<div class="panel">{% for item in notifications %}<div class="history-row">{% if not item.read_at %}<span class="badge">Новое</span>{% endif %} {{ item.text }}<time>{{ item.created_at|date:"d.m H:i" }}</time></div>{% empty %}<div class="empty">Уведомлений пока нет.</div>{% endfor %}</div>
+{% endif %}
+{% endblock %}
