@@ -12,7 +12,7 @@
 <aside class="sidebar">
 <a class="brand" href="{% url 'family-home' %}"><span class="brand-mark">я</span><span>ясна<span class="brand-caption">мастерская и школа труда</span></span></a>
 <div class="workspace-label">СЕМЕЙНЫЙ КАБИНЕТ</div>
-<nav aria-label="Разделы семьи">{% for key, label, icon in family_nav %}<a href="/family/?page={{ key }}" class="{% if page == key %}active{% endif %}" {% if page == key %}aria-current="page"{% endif %}>{% include "dashboard/icon.html" with key=icon %}<span class="nav-label">{{ label }}</span></a>{% endfor %}</nav>
+<nav aria-label="Разделы семьи">{% for key, label, icon in family_nav %}<a href="/family/?page={{ key }}" aria-label="{{ label }}" class="{% if page == key %}active{% endif %}" {% if page == key %}aria-current="page"{% endif %}>{% include "dashboard/icon.html" with key=icon %}<span class="nav-label">{{ label }}</span></a>{% endfor %}</nav>
 <div class="sidebar-bottom"><div class="workshop-address">Ясна<br><span>Столярная мастерская · Сургут</span></div><div class="profile"><span class="avatar">{{ family.contact_name|first }}</span><span><strong>{{ family.contact_name }}</strong><small>Родитель</small></span><form action="{% url 'family-leave' %}" method="post">{% csrf_token %}<button aria-label="Выйти из семейного кабинета">↗</button></form></div></div>
 </aside>
 <div class="workspace">

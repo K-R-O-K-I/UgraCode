@@ -84,6 +84,12 @@ class FamilyTests(TestCase):
     def test_booking_cancel_reason_visible_to_master(self):
         response = self.client.post("/family/form/book/", {"child": self.child.pk, "lesson": self.lesson.pk})
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(Booking.objects.filter(lesson=self.lesson, child=self.child).exists())
+        checkout = Checkout.objects.get(lesson=self.lesson, invoice__child=self.child)
+        self.assertEqual(checkout.invoice.amount, PassPlan.objects.get(public=True, lessons=1).price)
+        for _ in range(2):
+            self.assertEqual(self.client.post(response.url, {"action": "confirm"}).status_code, 302)
+        self.assertEqual(Payment.objects.filter(invoice=checkout.invoice).count(), 1)
         booking = Booking.objects.get(lesson=self.lesson, child=self.child)
         self.client.post(f"/family/form/cancel/?booking={booking.pk}", {"reason": "Заболел"})
         booking.refresh_from_db()
@@ -93,6 +99,38 @@ class FamilyTests(TestCase):
         staff.force_login(self.master)
         response = staff.get("/", {"date": timezone.localdate(self.lesson.starts_at), "lesson": self.lesson.pk})
         self.assertContains(response, "Заболел")
+
+    def test_filled_lesson_leaves_booking_checkout_unpaid(self):
+        self.lesson.capacity = 1
+        self.lesson.save(update_fields=["capacity"])
+        response = self.client.post("/family/form/book/", {"child": self.child.pk, "lesson": self.lesson.pk})
+        checkout = Checkout.objects.get(lesson=self.lesson, invoice__child=self.child)
+        master.book(self.master, {"lesson": self.lesson, "child": self.other_child})
+        self.assertContains(self.client.post(response.url, {"action": "confirm"}), "Свободных мест больше нет")
+        self.assertFalse(Payment.objects.filter(invoice=checkout.invoice).exists())
+        self.assertFalse(Booking.objects.filter(lesson=self.lesson, child=self.child).exists())
+
+    def test_child_profile_and_avatar_are_family_private(self):
+        from io import BytesIO
+        from PIL import Image
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        avatar = BytesIO()
+        Image.new("RGB", (32, 32)).save(avatar, format="PNG")
+        response = self.client.post(f"/family/form/edit/?child={self.child.pk}", {
+            "name": self.child.name, "age": 9, "description": "Любит мастерить",
+            "avatar_upload": SimpleUploadedFile("avatar.png", avatar.getvalue()),
+        })
+        self.assertEqual(response.status_code, 302)
+        self.child.refresh_from_db()
+        self.assertEqual(self.child.age, 9)
+        self.assertEqual(self.child.description, "Любит мастерить")
+        url = f"/family/avatar/{self.child.pk}/"
+        self.assertEqual(self.client.get(url)["Content-Type"], "image/jpeg")
+        outsider = Client()
+        outsider.get(f"/family/enter/{services.issue_link(self.other)}/")
+        self.assertEqual(outsider.get(url).status_code, 404)
+        self.assertEqual(outsider.post(f"/family/form/edit/?child={self.child.pk}", {"name": "Other"}).status_code, 404)
 
     def test_other_bookings_are_inaccessible(self):
         booking = Booking.objects.filter(child=self.other_child).first()

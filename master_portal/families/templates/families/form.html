@@ -1,15 +1,15 @@
 {% extends "families/base.html" %}
 {% block content %}
-<a class="text-button back-link" href="/family/">← В семейный кабинет</a>
-<div class="heading-row"><div><h1>{{ title }}</h1>{% if booking %}<p class="subtext">{{ booking.child.name }} · {{ booking.lesson.title }} · {{ booking.lesson.starts_at|date:"j E, H:i" }}</p>{% endif %}</div></div>
-<form method="post" class="settings-card operation-form">{% csrf_token %}
-{% for field in form.hidden_fields %}{{ field }}{{ field.errors }}{% endfor %}
+<a class="text-button back-link" href="/family/?page={{ page }}">← Назад</a>
+<div class="heading-row"><div><h1>{{ title }}</h1>{% if booking %}<p class="subtext">{{ booking.child.name }} · {{ booking.lesson.title }} · {{ booking.lesson.starts_at|date:"j E, H:i" }}</p>{% elif lesson %}<p class="subtext">{{ lesson.title }} · {{ lesson.starts_at|date:"j E, H:i" }}</p>{% endif %}</div></div>
+<form method="post" enctype="multipart/form-data" class="settings-card operation-form">{% csrf_token %}
+{% for field in form.hidden_fields %}{{ field }}{{ field.errors }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% endfor %}
 {% if form.non_field_errors %}<div class="modal-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-<div class="form-grid">{% for field in form.visible_fields %}<div class="form-field full"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}</div>
+<div class="form-grid">{% for field in form.visible_fields %}<div class="form-field full"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</div>{% endfor %}</div>
 {% if action == "cancel" %}<p class="form-note">Бесплатная отмена — за {{ booking.lesson.policy.free_cancel_hours }} ч. до начала.{% if booking.lesson.policy.charge_late_cancel %} При поздней отмене списывается одно занятие. Если действующего абонемента нет, мастер отдельно согласует расчёт.{% else %} При поздней отмене занятие тоже сохраняется.{% endif %}</p>{% endif %}
 {% if action == "reason" %}<p class="form-note">Комментарий увидит мастер. Чтобы освободить место на будущем занятии, воспользуйтесь отменой записи.</p>{% endif %}
 {% if action == "buy" and demo_payment %}<p class="payment-note">Тестовая оплата · деньги не списываются.</p>{% endif %}
 {% if action == "book" and lesson %}<p class="form-note">Бесплатная отмена за {{ lesson.policy.free_cancel_hours }} ч. до начала.{% if lesson.policy.charge_absence %} Пропуск списывает занятие.{% endif %}</p>{% endif %}
-<div class="form-actions"><a class="secondary" href="/family/">Назад</a><button class="primary">{% if action == "buy" %}Перейти к оплате{% elif action == "cancel" %}Отменить запись{% elif action == "book" %}Записаться{% else %}Сохранить{% endif %}</button></div>
+<div class="form-actions"><a class="secondary" href="/family/?page={{ page }}">Назад</a><button class="primary">{% if action == "buy" or action == "book" %}Перейти к оплате{% elif action == "cancel" %}Отменить запись{% else %}Сохранить{% endif %}</button></div>
 </form>
 {% endblock %}

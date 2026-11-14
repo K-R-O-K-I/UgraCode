@@ -7,7 +7,7 @@ from django.utils import timezone
 from dashboard import services as master
 from dashboard.models import (
     Booking, Child, Family, Invoice, Lesson, LessonEntry, Notification,
-    Payment, Subscription,
+    PassPlan, Payment, Subscription,
 )
 from .models import AccessLink, Checkout
 from .security import token_hash
@@ -43,7 +43,10 @@ def revoke_links(family):
 @transaction.atomic
 def add_child(family, data):
     Family.objects.select_for_update().get(pk=family.pk)
-    child = Child.objects.create(family=family, name=data["name"])
+    child = Child.objects.create(
+        family=family, name=data["name"], age=data["age"], description=data["description"],
+        avatar=data["avatar_upload"] or b"",
+    )
     master.audit(ParentActor(family), f"В семью добавлен ребёнок {child.name}")
     Notification.objects.create(text=f"{family.contact_name} добавил(а) ребёнка {child.name}")
     return child
@@ -109,13 +112,44 @@ def create_checkout(family, child, plan, key, provider):
 
 
 @transaction.atomic
+def create_booking_checkout(family, child, lesson):
+    Family.objects.select_for_update().get(pk=family.pk)
+    lesson = Lesson.objects.select_for_update().get(pk=lesson.pk)
+    if child.family_id != family.pk or not child.active:
+        raise ValidationError("Выберите ребёнка из своей семьи.")
+    if lesson.status != "scheduled" or lesson.starts_at <= timezone.now():
+        raise ValidationError("Запись на занятие закрыта.")
+    if lesson.active_bookings.filter(child=child).exists():
+        raise ValidationError("Ребёнок уже записан на это занятие.")
+    if lesson.remaining <= 0:
+        raise ValidationError("Свободных мест больше нет.")
+    pending = Checkout.objects.filter(
+        lesson=lesson, invoice__child=child, status="pending", provider="demo",
+    ).first()
+    if pending:
+        return pending
+    plan = PassPlan.objects.filter(public=True, lessons=1).order_by("pk").first()
+    if not plan:
+        raise ValidationError("Тариф на одно занятие пока недоступен.")
+    days_until_lesson = (timezone.localdate(lesson.starts_at) - timezone.localdate()).days
+    invoice = Invoice.objects.create(
+        child=child, plan=plan, amount=plan.price, lessons=1,
+        validity_days=max(plan.validity_days, days_until_lesson + 1), status="open",
+    )
+    return Checkout.objects.create(invoice=invoice, lesson=lesson, provider="demo")
+
+
+@transaction.atomic
 def complete(checkout_id):
-    checkout = Checkout.objects.select_for_update().select_related("invoice__child").get(pk=checkout_id)
+    checkout = Checkout.objects.select_for_update().get(pk=checkout_id)
     invoice = Invoice.objects.select_for_update().get(pk=checkout.invoice_id)
     if checkout.status == "succeeded":
         return
     if checkout.status != "pending" or invoice.status != "open":
         raise ValidationError("Этот платёж уже отменён.")
+    child = invoice.child
+    if checkout.lesson_id:
+        master.book(ParentActor(child.family), {"lesson": checkout.lesson, "child": child})
     Payment.objects.create(invoice=invoice, method=checkout.provider, amount=invoice.amount, operation_key=checkout.pk)
     day = timezone.localdate()
     subscription = Subscription.objects.create(invoice=invoice, starts_on=day, expires_on=day+timedelta(days=invoice.validity_days-1))
@@ -124,7 +158,6 @@ def complete(checkout_id):
     invoice.save(update_fields=["status"])
     checkout.status = "succeeded"
     checkout.save(update_fields=["status"])
-    child = checkout.invoice.child
     master.audit(ParentActor(child.family), f"{child.name} — оплачено {invoice.amount} ₽")
     master.family_notice(child.family_id, f"{child.name} · оплата подтверждена, начислено {invoice.lessons} занятий.")
 

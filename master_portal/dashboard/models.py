@@ -16,6 +16,9 @@ class Child(models.Model):
     family = models.ForeignKey(Family, on_delete=models.PROTECT, related_name="children")
     name = models.CharField(max_length=160)
     active = models.BooleanField(default=True)
+    age = models.PositiveSmallIntegerField(null=True, blank=True)
+    description = models.CharField(max_length=500, blank=True)
+    avatar = models.BinaryField(default=bytes, blank=True, editable=False)
     def __str__(self):
         return self.name
     @property

@@ -3,7 +3,7 @@
 <div class="calendar-weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
 <div class="month-grid">
 {% for day in calendar_days %}
-<a href="/family/?page=calendar&date={{ day.value|date:'Y-m-d' }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}" class="{% if not day.in_month %}outside{% endif %} {% if day.value == selected_day %}selected{% endif %} {% if day.value == today %}today{% endif %}" aria-label="{{ day.value|date:'j E' }}{% if day.marked %}, есть запись{% endif %}"><span>{{ day.value|date:"j" }}</span>{% if day.marked %}<i></i>{% endif %}</a>
+<a href="/family/?page=calendar&date={{ day.value|date:'Y-m-d' }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}" class="{% if not day.in_month %}outside{% endif %} {% if day.value == selected_day %}selected{% endif %} {% if day.value == today %}today{% endif %}" aria-label="{{ day.value|date:'j E' }}{% if day.booked %}, есть запись{% elif day.has_lessons %}, есть занятия{% endif %}"><span>{{ day.value|date:"j" }}</span>{% if day.has_lessons %}<i class="{% if day.booked %}booked-dot{% endif %}"></i>{% endif %}</a>
 {% endfor %}
-</div><p class="calendar-legend"><i></i> Вы записаны на занятие</p>
+</div><p class="calendar-legend"><i></i> Есть занятия <i class="booked-dot"></i> Ваша запись</p>
 </section>
