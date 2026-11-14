@@ -1,0 +1,8 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<h1>Ссылка для {{ family.contact_name }}</h1>
+<div class="settings-card"><p>Скопируйте адрес и передайте родителю. Срок действия — 90 дней. Предыдущая ссылка отозвана.</p>
+<input type="text" readonly value="{{ link }}" aria-label="Персональная ссылка" style="width:100%;padding:16px">
+<p>Этот адрес показывается один раз. При необходимости можно выдать новый.</p>
+<a class="secondary" href="{% url 'families' %}">Вернуться к семьям</a></div>
+{% endblock %}

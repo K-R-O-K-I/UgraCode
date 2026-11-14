@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<div class="heading-row"><h1>Управление семьями</h1><a class="primary" href="{% url 'family-create' %}">Добавить семью</a></div>
+{% for family in families %}
+<section class="settings-card family-card">
+<h2>{{ family.contact_name }}</h2><p>{{ family.phone }}</p>
+<ul>{% for child in family.children.all %}<li>{% include "accounts/child_avatar.html" %}{{ child.name }}{% include "accounts/child_details.html" %}</li>{% endfor %}</ul>
+<div class="family-actions">
+
+<form method="post" action="{% url 'family-action' family.pk 'issue' %}">{% csrf_token %}<button class="primary">Выдать новую ссылку</button></form>
+<form method="post" action="{% url 'family-action' family.pk 'revoke' %}">{% csrf_token %}<button class="secondary">Отозвать доступ</button></form>
+<details><summary>Удалить семью</summary><p>Семья с историей занятий или оплат попадёт в архив. Доступ родителей будет закрыт.</p><form method="post" action="{% url 'family-action' family.pk 'delete' %}">{% csrf_token %}<button class="danger">Подтвердить удаление</button></form></details>
+</div>
+</section>
+{% empty %}<p>Семей пока нет.</p>{% endfor %}
+{% endblock %}

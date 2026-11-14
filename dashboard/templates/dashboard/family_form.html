@@ -1,0 +1,10 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block content %}
+<h1>Новая семья</h1>
+<form method="post" class="settings-card operation-form">
+{% csrf_token %}{{ form.as_p }}
+<p class="subtext">После получения ссылки родитель добавит детей в своём кабинете.</p>
+<button class="primary">Создать семью</button><a class="secondary" href="{% url 'families' %}">К семьям</a>
+</form>
+{% endblock %}

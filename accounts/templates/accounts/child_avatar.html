@@ -1,0 +1,1 @@
+{% if child.avatar %}<img class="avatar child-photo" src="{% url 'child-avatar' child.pk %}" alt="{{ child.name }}">{% else %}<span class="avatar">{{ child.initials }}</span>{% endif %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Кабинет семьи — Ясна{% endblock %}
+{% block content %}
+<h1>Кабинет семьи</h1>
+<p>{{ family.contact_name }}</p>
+<h2>Дети</h2>
+<ul>{% for child in children %}<li>{{ child.name }} — осталось занятий: {{ child.balance }}</li>{% empty %}<li>Дети пока не добавлены.</li>{% endfor %}</ul>
+<h2>Занятия и посещения</h2>
+<ul>{% for booking in bookings %}<li>{{ booking.lesson.starts_at|date:"d.m.Y H:i" }} — {{ booking.child.name }} — {{ booking.lesson.title }} — {{ booking.get_attendance_display }}</li>{% empty %}<li>Записей пока нет.</li>{% endfor %}</ul>
+<h2>Оплаты</h2>
+<ul>{% for payment in payments %}<li>{{ payment.confirmed_at|date:"d.m.Y" }} — {{ payment.invoice.child.name }} — {{ payment.amount }} ₽</li>{% empty %}<li>Оплат пока нет.</li>{% endfor %}</ul>
+<form method="post" action="{% url 'family-logout' %}">
+  {% csrf_token %}
+  <button class="button" type="submit">Выйти</button>
+</form>
+{% endblock %}

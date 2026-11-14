@@ -1,0 +1,7 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Ссылка для семьи</h1>
+<p>Передайте этот адрес родителю. Ссылка действует 90 дней и показывается здесь один раз.</p>
+<p><input type="text" readonly value="{{ url }}" aria-label="Ссылка для входа" size="75"></p>
+<a href="{% url 'admin:accounts_family_changelist' %}">Вернуться к семьям</a>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "families/base.html" %}
+{% block content %}
+<a class="text-button back-link" href="/family/?page={{ page }}">← Назад</a>
+<div class="heading-row">
+  <h1>{% if checkout.status == "succeeded" %}Оплата подтверждена{% elif checkout.status == "cancelled" %}Оплата отменена{% elif checkout.lesson %}Оплата занятия{% else %}Оплата абонемента{% endif %}</h1>
+</div>
+<section class="settings-card checkout-card">
+  {% if checkout.provider == "demo" %}
+  <div class="checkout-demo-brand"><strong>ЮKassa</strong><span>Демонстрация</span></div>
+  {% endif %}
+  <p class="eyebrow">{{ checkout.invoice.child.name }}</p>
+  {% if checkout.lesson %}
+  <h2>{{ checkout.lesson.title }}</h2>
+  <p>{{ checkout.lesson.starts_at|date:"j E Y, H:i" }}</p>
+  {% else %}
+  <h2>{{ checkout.invoice.plan.name }}</h2>
+  <p>Срок действия — {{ checkout.invoice.validity_days }} дней с оплаты</p>
+  {% endif %}
+  <strong class="checkout-amount">{{ checkout.invoice.amount }} ₽</strong>
+  {% if checkout.provider == "demo" %}
+  <p class="payment-note">Тестовая оплата. Деньги не списываются, данные карты не нужны.</p>
+  {% endif %}
+  {% if error %}<p class="modal-error" role="alert">{{ error }}</p>{% endif %}
+  {% if checkout.status == "pending" %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      {% if checkout.provider == "demo" %}
+      <button name="action" value="cancel" class="secondary">Отменить оплату</button>
+      <button name="action" value="confirm" class="primary">Подтвердить тестовую оплату</button>
+      {% else %}
+      <button name="action" value="start" class="primary">Оплатить через ЮKassa</button>
+      {% if checkout.provider_id %}<button name="action" value="verify" class="secondary">Проверить оплату</button>{% endif %}
+      {% endif %}
+    </div>
+  </form>
+  {% elif checkout.status == "succeeded" %}
+    {% if checkout.lesson %}
+    <p>Ребёнок записан на занятие.</p>
+    <a class="primary" href="/family/?page=upcoming">К ближайшим занятиям</a>
+    {% else %}
+    <p>Занятия начислены ребёнку.</p>
+    <a class="primary" href="/family/?page=children">К детям</a>
+    {% endif %}
+  {% else %}
+    <a class="primary" href="/family/?page={{ page }}">Вернуться в кабинет</a>
+  {% endif %}
+</section>
+{% endblock %}
