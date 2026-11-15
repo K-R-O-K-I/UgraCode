@@ -109,8 +109,7 @@
  .own-booking>a { padding:10px 0; }
 }
 
-.mobile-family-exit { display:none; }
-@media (max-width:700px) { .mobile-family-exit { display:block; } .mobile-family-exit button { padding:8px 0; min-height:44px; } .family-app .topbar-actions { gap:12px; } }
+@media (max-width:700px) { .family-app .topbar-actions { gap:12px; } }
 .child-filter button {
   appearance:none;
   max-width:100%;

@@ -8,9 +8,13 @@
 <div class="day-strip">{% for item in week %}<a class="day {% if item.date == day %}active{% endif %}" href="?page=journal&date={{ item.date|date:'Y-m-d' }}"><span>{{ item.date|date:"D" }}</span><strong>{{ item.date|date:"j" }}</strong></a>{% endfor %}</div>
 <div class="create-lesson-row"><a class="primary" href="{% url 'operation' 'lesson' %}?date={{ day|date:'Y-m-d' }}">+ Создать занятие на {{ day|date:"j E" }}</a></div>
 {% else %}
+<section class="day-summary" aria-labelledby="day-summary-title">
+<h2 id="day-summary-title">Сводка дня</h2>
 <div class="stats"><div class="stat"><div><div class="stat-label">Занятий</div><div class="stat-value">{{ counts.lessons }}</div></div></div><div class="stat"><div><div class="stat-label">Записей</div><div class="stat-value">{{ counts.bookings }}</div></div></div><div class="stat"><div><div class="stat-label">Свободных мест</div><div class="stat-value">{{ counts.places }}</div></div></div></div>
+</section>
 {% endif %}
-<section class="lesson-section lesson-list">
+<section class="lesson-section lesson-list{% if page == 'schedule' %} today-lessons{% endif %}"{% if page == "schedule" %} aria-labelledby="today-lessons-title"{% endif %}>
+{% if page == "schedule" %}<h2 id="today-lessons-title">Занятия на сегодня</h2>{% endif %}
 {% for lesson in lessons %}
 <article class="lesson-card lesson-expandable" data-start="{{ lesson.starts_at|date:'c' }}" data-end="{{ lesson.ends_at|date:'c' }}">
 <details class="lesson-attendance" id="lesson-{{ lesson.pk }}"><summary class="lesson-cover">{% include "dashboard/lesson_cover.html" %}</summary>

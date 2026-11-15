@@ -105,3 +105,20 @@ main .heading-row > .primary.heading-action {
  flex-wrap: nowrap;
  gap: 12px;
 }
+
+.day-summary > h2,
+.today-lessons > h2 {
+  font-size: 20px;
+  margin: 0 0 14px;
+}
+.today-lessons {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 22px;
+}
+.form-actions.family-form-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
