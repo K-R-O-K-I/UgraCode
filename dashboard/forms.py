@@ -52,7 +52,7 @@ class PaymentForm(forms.Form):
         label="Ученик", empty_label=None, widget=forms.RadioSelect,
         queryset=Child.objects.filter(family__active=True).select_related("family").order_by("name", "pk"),
     )
-    amount = forms.DecimalField(label="Получено, ₽", max_digits=12, decimal_places=2, min_value=Decimal("0.01"), initial=4800)
+    amount = forms.DecimalField(label="Получено, ₽", max_digits=12, decimal_places=2, min_value=Decimal("0.01"), initial=5500)
     method = forms.ChoiceField(label="Способ оплаты", choices=[("cash", "Наличные"), ("transfer", "Перевод")])
     lessons = forms.IntegerField(label="Количество занятий", min_value=1, max_value=100, initial=4)
     validity_days = forms.IntegerField(label="Срок действия, дней", min_value=1, max_value=365, initial=30)

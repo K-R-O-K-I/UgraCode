@@ -68,7 +68,7 @@ def home(request):
     elif period == "month":
         start = day.replace(day=1)
         end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
-    daily = Lesson.objects.filter(starts_at__date__gte=start, starts_at__date__lt=end).select_related("policy").order_by("starts_at")
+    daily = Lesson.objects.filter(status="scheduled", starts_at__date__gte=start, starts_at__date__lt=end).select_related("policy").order_by("starts_at")
     previous = start - timedelta(days=1 if period != "week" else 7)
     following = end
     if period == "month":
@@ -87,13 +87,13 @@ def home(request):
         lessons = lessons.filter(title__icontains=query)
     lesson_id = request.GET.get("lesson", "")
     selected = daily.filter(pk=int(lesson_id)).first() if lesson_id.isdecimal() else None
-    selected = selected or daily.filter(status="scheduled").first() or daily.first()
+    selected = selected or daily.first()
     monday = day - timedelta(days=day.weekday())
     week = []
     for index in range(7):
         value = monday + timedelta(days=index)
         week.append({"date": value, "has_lessons": Lesson.objects.filter(starts_at__date=value, status="scheduled").exists()})
-    active = daily.filter(status="scheduled")
+    active = daily
     bookings = Booking.objects.filter(lesson__in=active, status="booked")
     counts = {
         "lessons": active.count(), "bookings": bookings.count(),

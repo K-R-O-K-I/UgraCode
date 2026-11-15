@@ -196,7 +196,7 @@ class FamilyTests(TestCase):
         checkout.provider_id = "provider-example"
         checkout.save()
         payload = {"id": "provider-example", "status": "succeeded", "paid": True,
-                   "amount": {"value": "4800.00", "currency": "RUB"},
+                   "amount": {"value": str(checkout.invoice.amount), "currency": "RUB"},
                    "metadata": {"invoice_id": str(checkout.invoice_id), "checkout_id": str(checkout.pk)}}
         with patch("families.payments.api", return_value=payload):
             verify(checkout)

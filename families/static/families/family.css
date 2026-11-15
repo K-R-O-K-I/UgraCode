@@ -25,8 +25,9 @@
 .lesson-time-line { font-size:12px; color:#00000099; margin:7px 0 11px; }
 .parent-lesson-photo { width:86px; height:99px; border-radius:12px; object-fit:cover; }
 .status-label { display:inline-flex; padding:4px 8px; border-radius:5px; font-size:10px; background:#eeeee7; color:#00000099; }
-.status-label.booked,.status-label.present { background:#FFFFFF; color:#D90007; }
-.status-label.absent { background:#FFFFFF; color:#D90007; }
+.status-label.booked { background:#FFFFFF; color:#D90007; }
+.status-label.present { background:#E8F5EC; color:#16713C; }
+.status-label.absent { background:#FFF0F0; color:#D90007; }
 .status-label.cancelled { background:#FFFFFF; color:#00000099; }
 .family-lesson details { grid-column:1/-1; font-size:12px; color:#00000099; padding-top:12px; border-top:1px solid var(--line); }
 .family-lesson summary { cursor:pointer; }

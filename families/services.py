@@ -121,7 +121,7 @@ def create_booking_checkout(family, child, lesson):
     ).first()
     if pending:
         return pending
-    plan = PassPlan.objects.filter(public=True, lessons=1).order_by("pk").first()
+    plan = PassPlan.objects.filter(public=True, lessons=1, name="Одно занятие").first()
     if not plan:
         raise ValidationError("Тариф на одно занятие пока недоступен.")
     days_until_lesson = (timezone.localdate(lesson.starts_at) - timezone.localdate()).days

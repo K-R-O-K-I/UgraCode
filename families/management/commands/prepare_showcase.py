@@ -50,9 +50,9 @@ class Command(BaseCommand):
         plan, _ = PassPlan.objects.get_or_create(name="Демонстрационный баланс", defaults={"lessons":8,"validity_days":30,"price":0,"public":False})
         created = 0
         for offset in (0,1):
-            for slot, title in enumerate(("Демо · Собираем кормушку", "Демо · Деревянная игрушка")):
+            for slot, title in enumerate(("Сборка кормушки из готовых деталей", "Сборка деревянной игрушки")):
                 start = timezone.make_aware(datetime.combine(today+timedelta(days=offset),time(14+slot*3)))
-                lesson, _ = Lesson.objects.get_or_create(title=title, starts_at=start, defaults={"ends_at":start+timedelta(minutes=90),"policy":policy,"capacity":max(6,len(children)),"description":"Собираем изделие из готовых деревянных деталей, шлифуем края и украшаем работу. Материалы и инструменты выдаёт мастер. Отмена без потери посещения — за 12 часов.","image":"wooden-toy.jpg"})
+                lesson, _ = Lesson.objects.get_or_create(title=title, starts_at=start, defaults={"ends_at":start+timedelta(minutes=90),"policy":policy,"capacity":max(6,len(children)),"description":"Собираем изделие из готовых деревянных деталей, шлифуем края и украшаем работу. Материалы и инструменты выдаёт мастер. Отмена без потери посещения — за 12 часов.","image": ("bird-feeder.png", "wooden-car.png")[slot]})
                 if start <= timezone.now():
                     continue
                 for child in children[slot::2]:

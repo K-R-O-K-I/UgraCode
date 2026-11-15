@@ -4,7 +4,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Вход мастера · Ясна</title><link rel="stylesheet" href="{% static 'dashboard/styles.css' %}"><link rel="stylesheet" href="{% static 'brand.css' %}?v=3"></head>
 <body class="login-page">
 <main class="login-card">
-<img src="{% static 'brand/yasna.png' %}" class="brand-logo" alt="Ясна">
+<img src="{% static 'brand/yasna-orange.png' %}" class="brand-logo" alt="Ясна">
 <h1>Кабинет мастера</h1><p class="subtext">Войдите, чтобы открыть расписание и журнал.</p>
 <form method="post">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}{{ field }}</label>{{ field.errors }}{% endfor %}<input type="hidden" name="next" value="{{ next }}"><button class="primary" type="submit">Войти</button></form>
 </main>
