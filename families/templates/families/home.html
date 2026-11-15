@@ -60,7 +60,7 @@
 
     </div>
     {% else %}
-    <a class="secondary" href="?page=calendar&child={{ child.pk }}">Выбрать занятие</a>
+    <a class="secondary" href="?page=calendar">Выбрать занятие</a>
     {% endif %}
   </article>
   {% empty %}
@@ -70,18 +70,16 @@
 <a class="text-button" href="?page=visits">История посещений</a>
 {% elif page == "calendar" %}
 <div class="heading-row"><div><h1>Запись</h1></div></div>
-{% include "families/child_filter.html" %}
-<div class="family-layout calendar-layout"><section><div class="section-top"><h2>{{ selected_day|date:"j E, l" }}</h2><a class="text-button" href="/family/?page=calendar{% if selected_child %}&child={{ selected_child.pk }}{% endif %}">Сегодня</a></div>
+<div class="family-layout calendar-layout"><section><div class="section-top"><h2>{{ selected_day|date:"j E, l" }}</h2><a class="text-button" href="/family/?page=calendar">Сегодня</a></div>
 {% for item in lesson_cards %}
 <article class="available-lesson"><div class="available-top"><div><p class="lesson-kind">{{ item.lesson.get_kind_display }}</p><h2>{{ item.lesson.title }}</h2><p class="lesson-time-line">{{ item.lesson.starts_at|date:"H:i" }}–{{ item.lesson.ends_at|date:"H:i" }}{% if item.lesson.status == "scheduled" and item.lesson.starts_at > now %} · Свободных мест: {{ item.lesson.remaining }}{% endif %}</p></div><img src="{% static 'dashboard/assets/' %}{{ item.lesson.image }}" class="parent-lesson-photo" alt="Работа из дерева"></div><p class="task-text">{{ item.lesson.description }}</p><p class="cancellation-hint">Без потери занятия — отмена за {{ item.lesson.policy.free_cancel_hours }} ч. до начала.</p>
 {% for booking in item.family_bookings %}<div class="own-booking"><strong>{{ booking.child.name }} {% include "accounts/child_age.html" with child=booking.child %}</strong>{% include "families/status.html" %}{% if booking.status == "booked" and booking.lesson.starts_at > now and booking.attendance == "pending" %}<a class="secondary compact" href="{% url 'family-operation' 'cancel' %}?booking={{ booking.pk }}">Отменить</a>{% endif %}</div>{% endfor %}
-{% if item.can_book %}<a class="primary" href="{% url 'family-operation' 'book' %}?lesson={{ item.lesson.pk }}{% if selected_child %}&child={{ selected_child.pk }}{% endif %}">Записать ребёнка</a>{% elif item.lesson.status == "cancelled" %}<span class="status-label cancelled">Занятие отменено</span>{% elif item.lesson.starts_at > now %}<span class="status-label">Свободных мест нет</span>{% else %}<span class="status-label">Запись завершена</span>{% endif %}
+{% if item.can_book %}<a class="primary" href="{% url 'family-operation' 'book' %}?lesson={{ item.lesson.pk }}">Записать ребёнка</a>{% elif item.lesson.status == "cancelled" %}<span class="status-label cancelled">Занятие отменено</span>{% elif item.lesson.starts_at > now %}<span class="status-label">Свободных мест нет</span>{% else %}<span class="status-label">Запись завершена</span>{% endif %}
 </article>
 {% empty %}<div class="empty"><strong>На этот день занятий нет</strong>Выберите другую дату в календаре.</div>{% endfor %}
 </section><aside>{% include "families/calendar.html" %}</aside></div>
 {% elif page == "visits" %}
 <div class="heading-row"><div><h1>Посещения</h1><p class="subtext">Отметки мастера и ваши комментарии</p></div></div>
-{% include "families/child_filter.html" %}
 <div class="visit-list">
   {% for booking in bookings %}
   <article class="visit-card">
@@ -113,6 +111,9 @@
 <div class="money-summary"><span>К оплате по открытым счетам</span><strong>{{ unpaid|floatformat:2 }} ₽</strong></div>
 {% for checkout in checkouts %}<div class="pending-payment"><div><strong>{{ checkout.invoice.child.name }}</strong><p>{% if checkout.lesson %}{{ checkout.lesson.title }}{% else %}Абонемент{% endif %} · {{ checkout.invoice.amount }} ₽</p></div><a class="secondary" href="{% url 'family-checkout' checkout.pk %}">Продолжить оплату</a></div>{% endfor %}
 <div class="payment-list">{% for payment in payments %}<article class="payment-card"><div><p class="lesson-kind">{{ payment.confirmed_at|date:"j E Y" }} · {{ payment.get_method_display }}</p><h2>{{ payment.invoice.child.name }}</h2><p>{{ payment.invoice.lessons }} занятий</p></div><strong class="payment-amount">{{ payment.amount }} ₽</strong><div class="receipt-links">{% for receipt in payment.receipts.all %}<a class="text-button" href="{% url 'family-receipt' receipt.pk %}" target="_blank" rel="noopener noreferrer">Открыть чек ↗</a>{% empty %}<span class="subtext">Чек появится после прикрепления мастером</span>{% endfor %}</div></article>{% empty %}<div class="empty">Оплат пока нет. Здесь будут храниться платежи и чеки.</div>{% endfor %}</div>
+{% elif page == "receipts" %}
+<div class="heading-row"><h1>Чеки</h1></div>
+<div class="payment-list">{% for receipt in receipts %}<article class="payment-card"><div><p class="subtext">Оплата {{ receipt.payment.confirmed_at|date:"d.m.Y" }}</p><h2>{{ receipt.payment.invoice.child.name }}</h2><p>{{ receipt.payment.amount }} ₽ · {{ receipt.payment.invoice.lessons }} занятий</p></div><a class="secondary" href="{% url 'family-receipt' receipt.pk %}" target="_blank" rel="noopener">Открыть чек</a></article>{% empty %}<div class="empty">Чеков пока нет. После прикрепления мастером они появятся здесь.</div>{% endfor %}</div>
 {% elif page == "notifications" %}
 <div class="heading-row"><h1>Уведомления</h1><form method="post">{% csrf_token %}<button class="secondary">Прочитать все</button></form></div><div class="panel">{% for note in notifications %}<div class="history-row">{% if not note.read_at %}<span class="badge">Новое</span>{% endif %} {{ note.text }}<time>{{ note.created_at|date:"d.m.Y H:i" }}</time></div>{% empty %}<div class="empty">Уведомлений пока нет.</div>{% endfor %}</div>
 {% endif %}

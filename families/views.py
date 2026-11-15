@@ -22,7 +22,7 @@ from .models import AccessLink, Checkout
 from .security import allow_attempt, family_only, token_hash
 
 NAV = [("calendar", "Запись", "schedule"), ("upcoming", "Ближайшее", "journal"),
-       ("children", "Дети", "children")]
+       ("children", "Дети", "children"), ("receipts", "Чеки", "payments")]
 
 
 def context(request, page="calendar"):
@@ -51,7 +51,7 @@ def enter(request, token):
 @family_only
 def home(request):
     page = request.GET.get("page", "calendar")
-    if page not in {"calendar", "upcoming", "children", "visits", "payments", "notifications"}:
+    if page not in {"calendar", "upcoming", "children", "visits", "payments", "receipts", "notifications"}:
         page = "calendar"
     notes = Notification.objects.filter(family=request.family)
     if request.method == "POST":
@@ -68,13 +68,6 @@ def home(request):
     ).defer("child__avatar").order_by("lesson__starts_at", "pk")
     data = context(request, page)
     data.update(today=today, now=now, children=children)
-
-    if page in {"calendar", "visits"}:
-        child_id = request.GET.get("child", "")
-        selected_child = children.filter(pk=int(child_id)).first() if child_id.isascii() and child_id.isdecimal() and len(child_id) <= 18 else None
-        if selected_child:
-            bookings = bookings.filter(child=selected_child)
-        data["selected_child"] = selected_child
 
     if page == "calendar":
         try:
@@ -141,6 +134,8 @@ def home(request):
             payments=Payment.objects.filter(invoice__child__family=request.family).select_related("invoice__child").prefetch_related("receipts"),
             checkouts=Checkout.objects.filter(invoice__child__family=request.family, status="pending").select_related("invoice__child", "lesson"),
         )
+    elif page == "receipts":
+        data["receipts"] = Receipt.objects.filter(payment__invoice__child__family=request.family).select_related("payment__invoice__child").order_by("-created_at")
     elif page == "notifications":
         data["notifications"] = notes[:100]
     return render(request, "families/home.html", data)
@@ -149,18 +144,15 @@ def home(request):
 @family_only
 def operation(request, action):
     titles = {"edit": "Редактировать профиль", "child": "Добавить ребёнка", "book": "Записаться на занятие", "cancel": "Отменить запись",
-              "reason": "Сообщить причину отсутствия", "buy": "Купить абонемент"}
-    if action == "reason":
-        return HttpResponse(status=404)
+              "buy": "Купить абонемент"}
     if action not in titles:
         return HttpResponse(status=404)
     booking = None
     initial = {}
-    if action in ("cancel", "reason"):
+    if action == "cancel":
         if not request.GET.get("booking", "").isdecimal():
             return HttpResponse(status=404)
         booking = get_object_or_404(Booking.objects.select_related("lesson", "child"), pk=request.GET.get("booking"), child__family=request.family)
-        initial["reason"] = booking.parent_reason
     if request.GET.get("child", "").isdecimal():
         initial["child"] = get_object_or_404(Child, pk=request.GET["child"], family=request.family)
     if action == "child" and "child" in initial:
@@ -170,7 +162,7 @@ def operation(request, action):
     if request.GET.get("lesson", "").isdecimal():
         initial["lesson"] = get_object_or_404(Lesson, pk=request.GET["lesson"])
     form_class = {"child": forms.ChildForm, "edit": forms.ChildForm, "book": forms.BookForm, "cancel": forms.CancelForm,
-                  "reason": forms.ReasonForm, "buy": forms.BuyForm}[action]
+                  "buy": forms.BuyForm}[action]
     kwargs = {"family": request.family} if action in ("book", "buy") else {}
     if action == "edit":
         kwargs["instance"] = initial["child"]
@@ -197,15 +189,13 @@ def operation(request, action):
                 return redirect("family-checkout", pk=checkout.pk)
             elif action == "cancel":
                 services.parent_cancel(request.family, booking, confirmed_late=data["confirm_late"])
-            elif action == "reason":
-                services.absence_reason(request.family, booking, data["reason"])
             else:
                 mode = settings.PAYMENT_MODE
                 if mode not in ("demo", "yookassa") or (mode == "demo" and not settings.DEBUG):
                     raise ValidationError("Оплата пока не подключена. Обратитесь к мастеру.")
                 checkout = services.create_checkout(request.family, data["child"], data["plan"], data["key"], mode)
                 return redirect("family-checkout", pk=checkout.pk)
-            messages.success(request, "Сохранено." if action == "reason" else "Готово.")
+            messages.success(request, "Готово.")
             return redirect("/family/?page=" + ("children" if action in {"child", "edit"} else "upcoming"))
         except ValidationError as error:
             form.add_error(None, error)
@@ -222,10 +212,15 @@ def operation(request, action):
 @family_only
 def checkout_view(request, pk):
     checkout = get_object_or_404(Checkout.objects.select_related("invoice__child"), pk=pk, invoice__child__family=request.family)
+    from .documents import prepare, accept
+    if checkout.status == "pending":
+        checkout = prepare(checkout)
     error = ""
     if request.method == "POST":
         action = request.POST.get("action")
         try:
+            if action in {"confirm", "start"} and checkout.status == "pending":
+                accept(checkout, request.POST.getlist("documents"))
             if checkout.provider == "demo":
                 if not settings.DEBUG or settings.PAYMENT_MODE != "demo":
                     return HttpResponse(status=403)
@@ -246,7 +241,7 @@ def checkout_view(request, pk):
         except ValidationError as exception:
             error = " ".join(exception.messages)
     result = context(request, "calendar" if checkout.lesson_id else "children")
-    result.update(checkout=checkout, error=error)
+    result.update(checkout=checkout, error=error, documents=checkout.documents.all())
     return render(request, "families/checkout.html", result)
 
 

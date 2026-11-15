@@ -7,7 +7,6 @@
 {% if form.non_field_errors %}<div class="modal-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 <div class="form-grid">{% for field in form.visible_fields %}<div class="form-field full"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</div>{% endfor %}</div>
 {% if action == "cancel" %}{% if late_cancel %}<input type="hidden" name="confirm_late" value="true"><p class="form-note">Срок бесплатной отмены истёк. При отмене одно занятие сгорит. Продолжить?</p>{% else %}<p class="form-note">Запись будет отменена. Одно занятие вернётся на баланс для новой записи.</p>{% endif %}{% endif %}
-{% if action == "reason" %}<p class="form-note">Комментарий увидит мастер. Чтобы освободить место на будущем занятии, воспользуйтесь отменой записи.</p>{% endif %}
 {% if action == "buy" and demo_payment %}<p class="payment-note">Тестовая оплата · деньги не списываются.</p>{% endif %}
 {% if action == "book" and lesson %}<p class="form-note">Бесплатная отмена за {{ lesson.policy.free_cancel_hours }} ч. до начала.{% if lesson.policy.charge_absence %} Пропуск списывает занятие.{% endif %}</p>{% endif %}
 <div class="form-actions"><a class="secondary" href="/family/?page={{ page }}">Назад</a><button class="primary">{% if action == "buy" or action == "book" %}Продолжить{% elif action == "cancel" %}Продолжить{% else %}Сохранить{% endif %}</button></div>

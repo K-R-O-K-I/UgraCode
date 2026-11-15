@@ -1,5 +1,6 @@
 from pathlib import Path
 import csv
+import calendar
 from datetime import date, timedelta
 from functools import wraps
 from urllib.parse import urlencode
@@ -13,7 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from . import forms, services
-from .models import AuditEvent, Booking, Child, Lesson, LessonPolicy, Notification, Payment, Receipt
+from .models import AuditEvent, Booking, Child, Lesson, Notification, Payment, Receipt
 
 PAGES = [
     ("schedule", "Сегодня", "▦"), ("journal", "Расписание", "▤"),
@@ -35,7 +36,7 @@ def staff_only(view):
 def base_context(request, page="schedule"):
     return {
         "now": timezone.now(), "page": page, "nav": PAGES,
-        "page_title": dict((key, name) for key, name, _ in PAGES).get(page, "Мастерская"),
+        "page_title": dict((key, name) for key, name, _ in PAGES).get(page, "Документы" if page == "documents" else "Мастерская"),
         "unread": Notification.objects.filter(family__isnull=True, read_at__isnull=True).count(),
     }
 
@@ -50,11 +51,35 @@ def home(request):
         day = date.fromisoformat(request.GET.get("date", ""))
     except ValueError:
         day = timezone.localdate()
+    if not 2 <= day.year <= 9998:
+        day = timezone.localdate()
     if page == "schedule":
         day = timezone.localdate()
     query = request.GET.get("q", "").strip()
     kind = request.GET.get("kind", "")
-    daily = Lesson.objects.filter(starts_at__date=day)
+    period = request.GET.get("period", "day") if page == "journal" else "day"
+    if period not in {"day", "week", "month"}:
+        period = "day"
+    start = day
+    end = day + timedelta(days=1)
+    if period == "week":
+        start = day - timedelta(days=day.weekday())
+        end = start + timedelta(days=7)
+    elif period == "month":
+        start = day.replace(day=1)
+        end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    daily = Lesson.objects.filter(starts_at__date__gte=start, starts_at__date__lt=end).select_related("policy").order_by("starts_at")
+    previous = start - timedelta(days=1 if period != "week" else 7)
+    following = end
+    if period == "month":
+        previous = previous.replace(day=1)
+    calendar_days = []
+    if period in {"week", "month"}:
+        days = list(calendar.Calendar().itermonthdates(day.year, day.month)) if period == "month" else [start + timedelta(days=i) for i in range(7)]
+        grouped = {}
+        for lesson in daily:
+            grouped.setdefault(timezone.localdate(lesson.starts_at), []).append(lesson)
+        calendar_days = [{"date": value, "in_month": value.month == day.month, "lessons": grouped.get(value, [])} for value in days]
     lessons = daily
     if kind in ("group", "individual"):
         lessons = lessons.filter(kind=kind)
@@ -79,7 +104,9 @@ def home(request):
         children = children.filter(Q(name__icontains=query) | Q(family__contact_name__icontains=query))
     context.update({
         "day": day, "today": timezone.localdate(), "week": week,
-        "previous": day - timedelta(days=7), "following": day + timedelta(days=7),
+        "previous": previous, "following": following, "period": period,
+        "period_options": [("day", "День"), ("week", "Неделя"), ("month", "Месяц")],
+        "range_start": start, "range_end": end - timedelta(days=1), "calendar_days": calendar_days,
         "lessons": lessons, "selected": selected, "query": query, "kind": kind,
         "counts": counts, "children": children, "low_balance": [child for child in children if child.balance <= 1][:3],
         "payments": Payment.objects.select_related("invoice__child").prefetch_related("receipts"),
@@ -98,7 +125,6 @@ ACTIONS = {
     "lesson": (forms.LessonForm, "Новое занятие", services.save_lesson),
     "attendance": (forms.AttendanceForm, "Отметка посещения", services.mark),
     "cancel": (forms.CancelForm, "Отменить занятие", services.cancel),
-    "move": (forms.MoveForm, "Перенести запись", services.move),
     "payment": (forms.PaymentForm, "Внести оплату", services.pay),
     "receipt": (forms.ReceiptForm, "Прикрепить чек", services.attach_receipt),
 }
@@ -106,7 +132,7 @@ ACTIONS = {
 
 @staff_only
 def operation(request, action):
-    if action == "move" or (action == "lesson" and request.GET.get("id")):
+    if action == "lesson" and request.GET.get("id"):
         return HttpResponse(status=404)
     if action not in ACTIONS:
         return HttpResponse(status=404)
@@ -119,43 +145,28 @@ def operation(request, action):
     booking = None
     if "booking" in initial:
         booking = get_object_or_404(Booking.objects.select_related("lesson", "child"), pk=initial["booking"])
-    lesson = None
-    pk = request.GET.get("id", "")
     if action == "lesson":
-        if pk.isdecimal():
-            lesson = get_object_or_404(Lesson, pk=int(pk))
-            title = "Изменить занятие"
-            initial = {field: getattr(lesson.policy if field in forms.PolicyForm.base_fields else lesson, field) for field in forms.LessonForm.base_fields}
-        else:
-            start = timezone.localtime().replace(hour=16, minute=0, second=0, microsecond=0)
-            try:
-                chosen = date.fromisoformat(request.GET.get("date", ""))
-                start = start.replace(year=chosen.year, month=chosen.month, day=chosen.day)
-            except ValueError:
-                pass
-            initial.update(starts_at=start, ends_at=start + timedelta(minutes=90))
+        start = timezone.localtime().replace(hour=16, minute=0, second=0, microsecond=0)
+        try:
+            chosen = date.fromisoformat(request.GET.get("date", ""))
+            start = start.replace(year=chosen.year, month=chosen.month, day=chosen.day)
+        except ValueError:
+            pass
+        initial.update(starts_at=start, ends_at=start + timedelta(minutes=90))
     if action == "attendance":
         initial["attendance"] = request.GET.get("value", "present")
-    if action == "policy":
-        current = LessonPolicy.objects.order_by("-pk").first()
-        if current:
-            initial = {field: getattr(current, field) for field in forms.PolicyForm.base_fields}
     form = form_class(request.POST or None, request.FILES or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         try:
             if action == "lesson":
-                result = handler(request.user, form.cleaned_data, pk=lesson.pk if lesson else None)
+                result = handler(request.user, form.cleaned_data)
                 destination = "/?" + urlencode({"date": timezone.localdate(result.starts_at).isoformat(), "lesson": result.pk})
             else:
                 handler(request.user, form.cleaned_data)
                 destination = "/"
                 if action in ("payment", "receipt"):
                     destination = "/?page=payments"
-                elif action == "child":
-                    destination = "/?page=children"
-                elif action == "policy":
-                    destination = "/?page=settings"
-                elif action in ("attendance", "cancel", "move", "booking"):
+                elif action in ("attendance", "cancel"):
                     event = form.cleaned_data.get("lesson") or form.cleaned_data["booking"].lesson
                     destination = "/?" + urlencode({"date": timezone.localdate(event.starts_at).isoformat(), "lesson": event.pk})
             messages.success(request, "Сохранено.")

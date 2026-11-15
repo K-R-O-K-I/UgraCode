@@ -2,14 +2,14 @@
   --bg: #f6f5f1;
   --surface: #fffefb;
   --ink: #2e342d;
-  --muted: #85877c;
-  --line: #e7e7dd;
-  --olive: #626e43;
-  --olive-dark: #455031;
-  --lime: #e4eacb;
-  --sand: #ece1d2;
+  --muted: #00000099;
+  --line: #FFFFFF;
+  --olive: #D90007;
+  --olive-dark: #D90007;
+  --lime: #00000018;
+  --sand: #00000018;
   --radius: 22px;
-  --shadow: 0 5px 18px #343c2810, 0 1px 2px #fff inset;
+  --shadow: 0 5px 18px #D9000710, 0 1px 2px #ffffff inset;
 }
 * {
   box-sizing: border-box;
@@ -53,13 +53,13 @@ button {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #a8b47f;
+  outline: 3px solid #00000099;
   outline-offset: 4px;
 }
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid #9aa879;
+  outline: 2px solid #00000099;
   outline-offset: 1px;
 }
 .sidebar {
@@ -67,7 +67,7 @@ textarea:focus {
   position: fixed;
   inset: 0 auto 0 0;
   background: #eeefe7;
-  border-right: 1px solid #e2e3d8;
+  border-right: 1px solid #00000018;
   padding: 35px 21px 18px;
   display: flex;
   flex-direction: column;
@@ -87,7 +87,7 @@ textarea:focus {
   place-items: center;
   width: 42px;
   height: 48px;
-  border: 1px solid #747d59;
+  border: 1px solid #D90007;
   border-radius: 16px 3px 16px 3px;
   font-family: Georgia, serif;
   font-size: 41px;
@@ -105,7 +105,7 @@ textarea:focus {
 }
 .workspace-label {
   font-size: 9px;
-  color: #8b907e;
+  color: #00000099;
   letter-spacing: 1.6px;
   margin: 48px 15px 16px;
 }
@@ -118,18 +118,18 @@ nav a {
   gap: 13px;
   align-items: center;
   padding: 13px 15px;
-  color: #6e7464;
+  color: #D90007;
   border-radius: 12px;
   font-size: 13px;
   transition: 0.2s;
 }
 nav a:hover {
-  background: #e5e8d9;
+  background: #FFFFFF;
 }
 nav a.active {
   background: var(--olive);
   color: white;
-  box-shadow: 0 5px 12px #56633a21;
+  box-shadow: 0 5px 12px #D9000721;
 }
 .icon {
   display: inline-block;
@@ -143,19 +143,19 @@ nav a.active {
   padding-top: 30px;
 }
 .workshop-note {
-  border-top: 1px solid #dfe2d4;
+  border-top: 1px solid #00000018;
   padding: 22px 13px;
-  color: #7c836d;
+  color: #00000099;
 }
 .small-leaf {
   font-size: 28px;
-  color: #798662;
+  color: #00000099;
 }
 .workshop-note p {
   font-family: Georgia, serif;
   font-style: italic;
   font-size: 18px;
-  color: #5a624c;
+  color: #D90007;
   line-height: 1.5;
   margin: 10px 0;
 }
@@ -163,7 +163,7 @@ nav a.active {
   font-size: 10px;
 }
 .profile {
-  border-top: 1px solid #dfe2d4;
+  border-top: 1px solid #00000018;
   padding: 19px 4px 0;
   display: flex;
   align-items: center;
@@ -187,8 +187,8 @@ nav a.active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e4dece;
-  border: 3px solid #fff9;
+  background: #00000018;
+  border: 3px solid #ffffff99;
   width: 39px;
   height: 39px;
   border-radius: 50%;
@@ -218,11 +218,11 @@ nav a.active {
 }
 .breadcrumbs span {
   padding: 0 13px;
-  color: #bbb;
+  color: #bbbbbb;
 }
 .breadcrumbs strong {
   font-weight: 500;
-  color: #535a4c;
+  color: #D90007;
 }
 .topbar-actions {
   display: flex;
@@ -231,7 +231,7 @@ nav a.active {
 }
 .demo-tag {
   font-size: 10px;
-  color: #7a806d;
+  color: #00000099;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -240,7 +240,7 @@ nav a.active {
   height: 5px;
   width: 5px;
   border-radius: 50%;
-  background: #8a9764;
+  background: #00000099;
 }
 .icon-button {
   width: 36px;
@@ -253,14 +253,14 @@ nav a.active {
   position: relative;
 }
 .icon-button:hover {
-  background: #e9eddd;
+  background: #FFFFFF;
 }
 .notification-dot {
   position: absolute;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #a1754b;
+  background: #00000099;
   right: 7px;
   top: 6px;
   border: 1px solid white;
@@ -281,7 +281,7 @@ main {
 .eyebrow {
   font-size: 10px;
   letter-spacing: 1.4px;
-  color: #8b8d7f;
+  color: #00000099;
   text-transform: uppercase;
   margin: 0 0 7px;
 }
@@ -324,7 +324,7 @@ h3 {
 .primary {
   background: var(--olive);
   color: white;
-  box-shadow: 0 3px 8px #50603618;
+  box-shadow: 0 3px 8px #D9000718;
 }
 .primary:hover {
   background: var(--olive-dark);
@@ -334,11 +334,11 @@ h3 {
   background: #fffef9;
 }
 .secondary:hover {
-  background: #eeefe5;
+  background: #FFFFFF;
 }
 .danger {
-  background: #f4e8e1;
-  color: #985644;
+  background: #FFFFFF;
+  color: #D90007;
 }
 .text-button {
   color: var(--olive);
@@ -352,7 +352,7 @@ h3 {
 }
 .hero {
   height: 205px;
-  background: #e8e9de;
+  background: #FFFFFF;
   border-radius: var(--radius);
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -380,7 +380,7 @@ h3 {
 }
 .hero-copy p {
   font-size: 11px;
-  color: #6e7565;
+  color: #D90007;
   max-width: 270px;
   margin: 0;
 }
@@ -392,19 +392,19 @@ h3 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #e8e9de, transparent 30%);
+  background: linear-gradient(90deg, #FFFFFF, transparent 30%);
 }
 .hero-label {
   position: absolute;
   right: 21px;
   bottom: 17px;
-  background: #f8f6ebdb;
-  border: 1px solid #fff8;
+  background: #FFFFFFdb;
+  border: 1px solid #ffffff88;
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 6px 13px;
   font-size: 10px;
-  color: #5e634c;
+  color: #D90007;
 }
 .stats {
   display: grid;
@@ -424,7 +424,7 @@ h3 {
 }
 .stat-label {
   font-size: 11px;
-  color: #7c8173;
+  color: #00000099;
 }
 .stat-value {
   font-size: 29px;
@@ -435,23 +435,23 @@ h3 {
 }
 .stat-note {
   font-size: 10px;
-  color: #919687;
+  color: #00000099;
 }
 .stat-icon {
   width: 32px;
   height: 32px;
-  background: #eef0e5;
+  background: #FFFFFF;
   border-radius: 10px;
   display: grid;
   place-items: center;
-  color: #8c9676;
+  color: #00000099;
 }
 .stat-icon .icon {
   width: 17px;
 }
 .stat:last-child .stat-icon {
-  background: #f3ebe0;
-  color: #aa8a60;
+  background: #FFFFFF;
+  color: #00000099;
 }
 .main-grid {
   display: grid;
@@ -467,7 +467,7 @@ h3 {
 }
 .section-top .muted-count {
   font-size: 12px;
-  color: #9b9e91;
+  color: #00000099;
   margin-left: 8px;
 }
 .day-strip {
@@ -484,7 +484,7 @@ h3 {
   border-radius: 10px;
   text-align: center;
   padding: 8px 2px;
-  color: #8b8e80;
+  color: #00000099;
   min-width: 0;
 }
 .day span {
@@ -498,8 +498,8 @@ h3 {
 }
 .day.active {
   background: var(--olive);
-  color: #fff;
-  box-shadow: 0 3px 7px #4c592c28;
+  color: #ffffff;
+  box-shadow: 0 3px 7px #D9000728;
 }
 .day:hover:not(.active) {
   background: white;
@@ -542,7 +542,7 @@ h3 {
   padding: 7px 10px;
   border: 1px solid transparent;
   border-radius: 7px;
-  color: #8b8e80;
+  color: #00000099;
 }
 .pill.active {
   background: white;
@@ -576,10 +576,10 @@ h3 {
   transition: 0.15s;
 }
 .lesson-card.selected {
-  border-color: #aeb994;
+  border-color: #00000099;
   box-shadow:
-    0 0 0 1px #c9d1b526,
-    0 4px 16px #5960440a;
+    0 0 0 1px #00000026,
+    0 4px 16px #D900070a;
 }
 .lesson-card.cancelled {
   opacity: 0.65;
@@ -592,13 +592,13 @@ h3 {
 .lesson-time small {
   display: block;
   font-size: 10px;
-  color: #9a9d91;
+  color: #00000099;
   letter-spacing: 0;
   margin-top: 4px;
 }
 .lesson-kind {
   font-size: 9px;
-  color: #8b947a;
+  color: #00000099;
   text-transform: uppercase;
   letter-spacing: 0.7px;
   margin-bottom: 4px;
@@ -608,7 +608,7 @@ h3 {
   line-height: 1.35;
 }
 .lesson-meta {
-  color: #909485;
+  color: #00000099;
   font-size: 10px;
   margin-top: 6px;
 }
@@ -631,7 +631,7 @@ h3 {
 }
 .occupancy {
   font-size: 10px;
-  color: #777e69;
+  color: #00000099;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -648,15 +648,15 @@ h3 {
   font-size: 8px;
   border-radius: 50%;
   border: 2px solid white;
-  background: #dfe5d1;
+  background: #00000018;
   margin-left: -4px;
 }
 .mini-avatars span:nth-child(2n) {
-  background: #e9dcc7;
+  background: #00000018;
 }
 .card-link {
   font-size: 10px;
-  color: #626d49;
+  color: #D90007;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -711,7 +711,7 @@ h3 {
 }
 .student-balance {
   font-size: 10px;
-  color: #8f9581;
+  color: #00000099;
   margin-top: 2px;
 }
 .attendance-actions {
@@ -722,27 +722,27 @@ h3 {
 .attendance-actions button {
   flex: 1;
   font-size: 9px;
-  border: 1px solid #e7e9dd;
+  border: 1px solid #FFFFFF;
   border-radius: 7px;
   padding: 6px 3px;
   min-height: 30px;
 }
 .attendance-actions button.is-present {
-  background: #e8eedb;
-  border-color: #c9d6ae;
-  color: #52633c;
+  background: #FFFFFF;
+  border-color: #00000018;
+  color: #D90007;
 }
 .attendance-actions button.is-absent {
-  background: #f1e7dd;
-  border-color: #d9bd9f;
-  color: #8a6845;
+  background: #FFFFFF;
+  border-color: #00000018;
+  color: #D90007;
 }
 .attendance-actions button.is-cancelled {
   background: #eeece7;
-  color: #7c7d72;
+  color: #00000099;
 }
 .attendance-actions button:hover {
-  border-color: #929c7e;
+  border-color: #00000099;
 }
 .panel-footer {
   padding: 14px 19px;
@@ -754,13 +754,13 @@ h3 {
 }
 .panel-footer span {
   font-size: 10px;
-  color: #9a9f90;
+  color: #00000099;
 }
 .note-panel {
   padding: 18px 19px;
-  background: #ebeede;
+  background: #FFFFFF;
   border-radius: 17px;
-  color: #67724f;
+  color: #D90007;
 }
 .note-title {
   display: flex;
@@ -778,11 +778,11 @@ h3 {
   font-size: 11px;
   margin-top: 12px;
   padding: 0;
-  color: #536337;
+  color: #D90007;
 }
 footer {
   padding: 20px 40px 25px;
-  color: #9c9f92;
+  color: #00000099;
   font-size: 9px;
   display: flex;
   justify-content: space-between;
@@ -803,8 +803,8 @@ table {
 th {
   font-size: 10px;
   font-weight: 500;
-  color: #879077;
-  background: #f0f2e9;
+  color: #00000099;
+  background: #FFFFFF;
   padding: 14px 18px;
 }
 td {
@@ -824,13 +824,13 @@ td .text-button {
   display: inline-block;
   border-radius: 6px;
   padding: 4px 8px;
-  background: #eef1e4;
-  color: #6b7953;
+  background: #FFFFFF;
+  color: #D90007;
   font-size: 10px;
 }
 .badge.warning {
-  background: #f5e8db;
-  color: #986f45;
+  background: #FFFFFF;
+  color: #D90007;
 }
 .toolbar {
   display: flex;
@@ -846,7 +846,7 @@ td .text-button {
 input,
 select,
 textarea {
-  border: 1px solid #dedfd2;
+  border: 1px solid #00000018;
   border-radius: 9px;
   padding: 11px 12px;
   background: #fffefb;
@@ -864,7 +864,7 @@ label {
   display: grid;
   gap: 7px;
   font-size: 12px;
-  color: #636d55;
+  color: #D90007;
 }
 label.check {
   display: flex;
@@ -892,17 +892,17 @@ label.check {
   margin: 15px 0 0;
 }
 dialog {
-  border: 1px solid #e2e5d9;
+  border: 1px solid #00000018;
   border-radius: 23px;
   background: var(--surface);
   color: var(--ink);
   padding: 0;
   width: min(610px, calc(100% - 26px));
   max-height: 90dvh;
-  box-shadow: 0 30px 100px #1d261f33;
+  box-shadow: 0 30px 100px #D9000733;
 }
 dialog::backdrop {
-  background: #1d281e55;
+  background: #D9000755;
   backdrop-filter: blur(5px);
 }
 .dialog-content {
@@ -920,8 +920,8 @@ dialog::backdrop {
 }
 .modal-error {
   font-size: 12px;
-  background: #f9eae2;
-  color: #9a513e;
+  background: #FFFFFF;
+  color: #D90007;
   padding: 12px;
   border-radius: 9px;
   margin: 14px 0 0;
@@ -934,11 +934,11 @@ dialog::backdrop {
   bottom: 25px;
   left: 50%;
   transform: translate(-50%, 25px);
-  background: #36412b;
-  color: #fff;
+  background: #D90007;
+  color: #ffffff;
   padding: 14px 24px;
   border-radius: 12px;
-  box-shadow: 0 8px 35px #26332026;
+  box-shadow: 0 8px 35px #D9000726;
   z-index: 100;
   opacity: 0;
   pointer-events: none;
@@ -953,12 +953,12 @@ dialog::backdrop {
 .empty {
   padding: 35px 20px;
   text-align: center;
-  color: #8c9480;
+  color: #00000099;
   font-size: 13px;
 }
 .empty strong {
   display: block;
-  color: #65734d;
+  color: #D90007;
   font-size: 17px;
   margin-bottom: 7px;
 }
@@ -1008,7 +1008,7 @@ dialog::backdrop {
   position: fixed;
   top: -70px;
   left: 20px;
-  background: #fff;
+  background: #ffffff;
   padding: 15px;
   z-index: 100;
 }
@@ -1134,9 +1134,9 @@ dialog::backdrop {
     width: 100%;
     height: 67px;
     padding: 6px 8px;
-    background: #f0f1e8f5;
+    background: #FFFFFFf5;
     backdrop-filter: blur(12px);
-    border-top: 1px solid #dfe2d4;
+    border-top: 1px solid #00000018;
     border-right: 0;
   }
   .brand {
@@ -1223,7 +1223,7 @@ dialog::backdrop {
     bottom: 10px;
   }
   .hero-photo:before {
-    background: linear-gradient(90deg, #e8e9de, transparent 45%);
+    background: linear-gradient(90deg, #FFFFFF, transparent 45%);
   }
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -1323,7 +1323,7 @@ dialog::backdrop {
 .workshop-address {
   padding: 24px 8px;
   font-size: 13px;
-  color: #747d65;
+  color: #D90007;
   border-top: 1px solid var(--line);
 }
 .workshop-address span {
@@ -1362,40 +1362,40 @@ dialog::backdrop {
   border-top: 1px solid #efefe8;
   font-size: 11px;
   padding-top: 10px;
-  color: #747e67;
+  color: #D90007;
 }
 .lesson-description summary {
   cursor: pointer;
 }
 .lesson-description p {
-  color: #535d4a;
+  color: #D90007;
   line-height: 1.7;
 }
 .muted-link {
   font-size: 11px;
-  color: #8b7b6c;
+  color: #00000099;
 }
 .attendance-actions a {
   flex: 1;
   text-align: center;
   font-size: 11px;
-  border: 1px solid #e0e4d6;
+  border: 1px solid #00000018;
   border-radius: 7px;
   padding: 8px 3px;
   min-height: 34px;
 }
 .attendance-actions .is-present {
-  background: #e8eedb;
-  border-color: #c9d6ae;
-  color: #52633c;
+  background: #FFFFFF;
+  border-color: #00000018;
+  color: #D90007;
 }
 .attendance-actions .is-absent {
-  background: #f1e7dd;
-  border-color: #d9bd9f;
-  color: #8a6845;
+  background: #FFFFFF;
+  border-color: #00000018;
+  color: #D90007;
 }
 .attendance-actions a:hover {
-  background: #eff2e5;
+  background: #FFFFFF;
 }
 .move-link {
   margin-top: 5px;
@@ -1435,9 +1435,9 @@ dialog::backdrop {
   max-width: 760px;
 }
 .flash {
-  background: #e6edd8;
-  border: 1px solid #c9d6b2;
-  color: #526540;
+  background: #FFFFFF;
+  border: 1px solid #00000018;
+  color: #D90007;
   padding: 12px 17px;
   border-radius: 10px;
   margin-bottom: 20px;
@@ -1446,23 +1446,23 @@ dialog::backdrop {
   list-style: none;
   padding: 0;
   margin: 8px 0;
-  color: #a24f36;
+  color: #D90007;
   font-size: 12px;
 }
 .login-page {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: linear-gradient(115deg, #f6f5ef, #e7eadc);
+  background: linear-gradient(115deg, #f6f5ef, #FFFFFF);
 }
 .login-card {
   min-height: 0;
   width: min(440px, calc(100% - 32px));
   background: #fffefb;
-  border: 1px solid #fff;
+  border: 1px solid #ffffff;
   border-radius: 24px;
   padding: 35px;
-  box-shadow: 0 18px 70px #46533512;
+  box-shadow: 0 18px 70px #D9000712;
 }
 .login-card .brand {
   margin-bottom: 38px;
@@ -1480,7 +1480,7 @@ dialog::backdrop {
   margin-top: 7px;
 }
 .profile .avatar {
-  border: 1px solid #d9dccc;
+  border: 1px solid #00000018;
 }
 .hero {
   height: 190px;
@@ -1656,8 +1656,8 @@ html {
   }
 }
 
-.attendance-actions button { flex:1; padding:12px; border:1px solid #dce1d2; border-radius:10px; background:white; font:inherit; cursor:pointer; }
-.attendance-actions .is-present,.attendance-actions .is-absent,.attendance-actions .is-cancelled { background:#e8eedb; border-color:#bdcd9d; }
+.attendance-actions button { flex:1; padding:12px; border:1px solid #00000018; border-radius:10px; background:white; font:inherit; cursor:pointer; }
+.attendance-actions .is-present,.attendance-actions .is-absent,.attendance-actions .is-cancelled { background:#FFFFFF; border-color:#00000099; }
 .family-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
 .family-card { margin-bottom:20px; }
 
@@ -1665,9 +1665,9 @@ input::placeholder, textarea::placeholder { opacity: .5; }
 .child-photo { object-fit: cover; border-radius: 50%; width: 52px; height: 52px; }
 .lesson-card { position: relative; }
 .lesson-journal-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
-.lesson-journal-link:focus-visible::after { outline: 3px solid #647443; outline-offset: 3px; }
+.lesson-journal-link:focus-visible::after { outline: 3px solid #D90007; outline-offset: 3px; }
 .lesson-card .card-link, .lesson-description { position: relative; z-index: 1; }
 
-#request-notice { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; width: min(90%, 600px); padding: 16px 20px; background: #fff7e9; border: 1px solid #ad8053; border-radius: 16px; box-shadow: 0 4px 20px #0002; }
+#request-notice { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 1000; width: min(90%, 600px); padding: 16px 20px; background: #FFFFFF; border: 1px solid #00000099; border-radius: 16px; box-shadow: 0 4px 20px #00000022; }
 html[aria-busy="true"] { cursor: progress; }
 button:disabled { opacity: .65; cursor: wait; }

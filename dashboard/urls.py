@@ -1,8 +1,10 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from dashboard import views
-from . import family_views
+from . import family_views, document_views
 urlpatterns = [
+    path("documents/", document_views.documents, name="documents"),
+    path("document/<int:pk>/", document_views.document_file, name="payment-document"),
     path("children/<int:pk>/", family_views.child_profile, name="child-profile"),
     path("families/", family_views.families, name="families"),
     path("families/new/", family_views.edit_family, name="family-create"),

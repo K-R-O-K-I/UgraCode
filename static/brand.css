@@ -1,0 +1,105 @@
+/* Customer brand palette. Translucent black/brand colors supply neutral states. */
+:root, .family-app { --bg:#FFFFFF; --surface:#FFFFFF; --ink:#000000; --muted:#00000099; --line:#00000020; --olive:#D90007; --olive-dark:#000000; --lime:#FFBC0D; --sand:#FFBC0D; --radius:14px; --shadow:0 5px 18px #0000000d; }
+body {background:#FFFFFF;color:#000000;}
+.sidebar, .topbar {background:#FFFFFF;}
+.brand-logo {width:100px;height:100px;object-fit:cover;display:block;border-radius:50%;}
+.brand {padding:0;}
+.mobile-brand {display:block;flex-shrink:0;}
+.mobile-brand .brand-logo {width:54px;height:54px;}
+.topbar {gap:14px;}
+.topbar .breadcrumbs {margin-right:auto;}
+.topbar .breadcrumbs strong, .sidebar nav .nav-label {color:#000000;}
+main :is(button,.primary,.secondary,.danger,.text-button,.card-link,.muted-link,.visit-reason,.child-book-link,summary:not(.lesson-cover)),
+nav a, .icon-button, .profile-arrow, .back-link {border-radius:8px!important;}
+.primary, button.primary, main .primary {background:#D90007;color:#FFFFFF;border:1px solid #D90007; background-image:none;box-shadow:0 3px 8px #00000012;}
+.primary:hover {background:#000000!important;border-color:#000000;}
+.secondary,.text-button,.card-link,.muted-link,.child-book-link, main summary:not(.lesson-cover) {background:#FFFFFF;color:#000000;border-color:#00000030;}
+nav a.active, .sidebar nav a.active {background:#FFBC0D;color:#000000;box-shadow:none;}
+.period-controls .secondary {text-transform:none;}
+.period-controls {display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+main .period-active, .day.active, .month-grid a.selected {background:#FFBC0D;color:#000000;border-color:#000000;}
+.lesson-card.lesson-current {background:#FFBC0D0d;border-color:#FFBC0D;box-shadow:0 0 0 2px #FFBC0D70;}
+.lesson-card.lesson-past {background:#00000005;filter:none;opacity:.65;}
+main .cancel-lesson-button, .danger, .family-actions .danger {background:#D900070c;color:#D90007;border-color:#D9000740;}
+.notification-dot {background:#D90007;}
+.balance-empty {color:#D90007!important;}
+.flash {background:#FFBC0D20;color:#000000;border-color:#FFBC0D;}
+main .attendance-actions button.is-present {background:#16713C;color:#FFFFFF;border-color:#16713C;}
+main .attendance-actions button.is-absent {background:#D90007;color:#FFFFFF;border-color:#D90007;}
+.child-profile-link {color:#000000;}
+:focus-visible {outline:2px solid #D90007;outline-offset:3px;}
+input,select,textarea {accent-color:#D90007;}
+.document-list {display:grid;gap:16px;margin-top:24px;}
+.consent-list {border:1px solid var(--line);border-radius:8px;padding:16px;margin:24px 0;}
+.consent-list label {display:flex;align-items:flex-start;gap:12px;margin:14px 0;line-height:1.6;}
+.consent-list input {width:22px;height:22px;min-height:22px;flex:0 0 22px;margin-top:3px;}
+.consent-list a {text-decoration:underline;color:#000000;}
+.calendar-scroll {overflow-x:auto;border:1px solid var(--line);border-radius:8px;}
+.schedule-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:700px;background:var(--line);gap:1px;}
+.calendar-cell {background:#FFFFFF;min-height:120px;padding:8px;}
+.calendar-today {background:#FFBC0D18;}
+.calendar-date {display:block;font-weight:600;margin-bottom:8px;}
+.outside-month .calendar-date {opacity:.4;}
+.calendar-event {display:block;padding:6px;background:#FFBC0D35;border-left:3px solid #D90007;border-radius:3px;font-size:12px;margin:5px 0;overflow-wrap:anywhere;}
+.event-cancelled {opacity:.45;text-decoration:line-through;}
+.schedule-date-heading {margin:24px 0 12px;font-size:20px;}
+.lesson-attendance {scroll-margin-top:100px;}
+@media(max-width:700px) {
+ .topbar .breadcrumbs {font-size:11px;} .topbar {padding:8px 16px;}
+ .topbar-actions .parent-contact {display:none;}
+ .sidebar nav {overflow-x:auto;justify-content:space-around;gap:2px;}
+ .sidebar nav a {flex:1 0 54px;min-width:0;padding:8px 3px;}
+ .sidebar .nav-label {font-size:10px;}
+ .calendar-control input[type=date] {max-width:160px;}
+}
+
+@media(max-width:700px) {
+ .schedule-month {min-width:0;}
+ .schedule-month .calendar-cell {padding:4px 2px;min-height:76px;}
+ .schedule-month .calendar-date {font-size:9px;}
+ .schedule-month .calendar-event {padding:4px 1px;border-left-width:2px;font-size:9px;}
+ .schedule-month .calendar-event-title {display:none;}
+ .period-controls {display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+ .period-controls .secondary {padding:9px 4px;font-size:12px;min-width:0;text-align:center;}
+}
+
+.document-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+.document-actions > form { display: flex; margin: 0; min-width: 0; }
+.document-actions .secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 8px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+main .lesson-card .lesson-description > summary,
+main .lesson-card .cancel-lesson-button {
+  min-height: 30px;
+  padding: 7px 11px;
+  gap: 6px;
+  font-size: 12px;
+  color: #000000;
+}
+main .lesson-description > p { color: #000000; }
+
+.calendar-cell { position: relative; }
+.calendar-date::after { content: ""; position: absolute; inset: 0; }
+.calendar-event { position: relative; z-index: 1; }
+
+.calendar-control.journal-calendar {
+  justify-content: center;
+  align-items: center;
+}
+.document-upload label {
+  color: #000000;
+  font-size: 1.125rem;
+}

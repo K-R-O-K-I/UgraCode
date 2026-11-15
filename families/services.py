@@ -87,17 +87,6 @@ def parent_cancel(family, booking, reason='', confirmed_late=False):
 
 
 @transaction.atomic
-def absence_reason(family, booking, reason):
-    booking = Booking.objects.select_for_update().get(pk=booking.pk, child__family=family)
-    before = booking.parent_reason
-    booking.parent_reason = reason
-    booking.save(update_fields=["parent_reason"])
-    master.audit(ParentActor(family), f"{booking.child.name} — комментарий родителя",
-                 before={"reason": before}, after={"reason": reason})
-    Notification.objects.create(text=f"{booking.child.name} · {booking.lesson.title}. Родитель — {reason}")
-
-
-@transaction.atomic
 def create_checkout(family, child, plan, key, provider):
     Family.objects.select_for_update().get(pk=family.pk, active=True)
     if child.family_id != family.pk or not child.family.active or not plan.public:
@@ -151,6 +140,8 @@ def complete(checkout_id):
         return
     if checkout.status != "pending" or invoice.status != "open":
         raise ValidationError("Этот платёж уже отменён.")
+    from .documents import ensure_accepted
+    ensure_accepted(checkout)
     lesson = None
     if checkout.lesson_id:
         lesson = Lesson.objects.select_for_update().get(pk=checkout.lesson_id)

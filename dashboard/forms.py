@@ -30,14 +30,6 @@ class LessonForm(forms.Form):
         return data
 
 
-class BookingForm(forms.Form):
-    lesson = forms.ModelChoiceField(label="Занятие", queryset=Lesson.objects.filter(status="scheduled", ends_at__gt=timezone.now()))
-    child = forms.ModelChoiceField(label="Ученик", queryset=Child.objects.filter(family__active=True))
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["lesson"].queryset = Lesson.objects.filter(status="scheduled", ends_at__gt=timezone.now())
-
-
 class AttendanceForm(forms.Form):
     booking = forms.ModelChoiceField(queryset=Booking.objects.all(), widget=forms.HiddenInput)
     attendance = forms.ChoiceField(label="Отметка", choices=Booking.ATTENDANCE)
@@ -48,11 +40,6 @@ class CancelForm(forms.Form):
     lesson = forms.ModelChoiceField(queryset=Lesson.objects.all(), widget=forms.HiddenInput)
     reason = forms.CharField(label="Причина отмены", max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
 
-
-class MoveForm(BookingForm):
-    booking = forms.ModelChoiceField(queryset=Booking.objects.all(), widget=forms.HiddenInput)
-    child = None
-    reason = forms.CharField(label="Причина переноса", max_length=500)
 
 
 class PaymentChildField(forms.ModelChoiceField):
@@ -102,9 +89,3 @@ class ReceiptForm(forms.Form):
                 raise ValidationError("Поддерживаются PDF, PNG и JPG.")
             uploaded.seek(0)
         return data
-
-
-class PolicyForm(forms.Form):
-    free_cancel_hours = forms.IntegerField(label="Бесплатная отмена, часов до начала", min_value=0, max_value=168, initial=12)
-    charge_absence = forms.BooleanField(label="Списывать занятие при пропуске", required=False, initial=True)
-    charge_late_cancel = forms.BooleanField(label="Списывать занятие при поздней отмене", required=False)

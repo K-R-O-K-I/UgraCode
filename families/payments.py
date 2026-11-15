@@ -27,6 +27,8 @@ def api(path, payload=None, key=None):
 
 
 def start(checkout):
+    from .documents import ensure_accepted
+    ensure_accepted(checkout)
     if checkout.confirmation_url:
         return checkout.confirmation_url
     invoice = checkout.invoice

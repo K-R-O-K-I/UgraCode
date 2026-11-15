@@ -24,13 +24,16 @@
   {% if checkout.status == "pending" %}
   <form method="post">
     {% csrf_token %}
+    <fieldset class="consent-list"><legend>Документы перед оплатой</legend>
+    {% for document in documents %}<label><input type="checkbox" name="documents" value="{{ document.pk }}" required> <span>Я прочитал(а) и принимаю <a href="{% url 'payment-document' document.pk %}" target="_blank" rel="noopener">{{ document.title }}</a> <small>от {{ document.created_at|date:"d.m.Y" }}</small></span></label>{% empty %}<p class="subtext">Документы пока не добавлены.</p>{% endfor %}
+    </fieldset>
     <div class="form-actions">
       {% if checkout.provider == "demo" %}
-      <button name="action" value="cancel" class="secondary">Отменить оплату</button>
+      <button name="action" value="cancel" formnovalidate class="secondary">Отменить оплату</button>
       <button name="action" value="confirm" class="primary">Подтвердить тестовую оплату</button>
       {% else %}
       <button name="action" value="start" class="primary">Оплатить через ЮKassa</button>
-      {% if checkout.provider_id %}<button name="action" value="verify" class="secondary">Проверить оплату</button>{% endif %}
+      {% if checkout.provider_id %}<button name="action" value="verify" formnovalidate class="secondary">Проверить оплату</button>{% endif %}
       {% endif %}
     </div>
   </form>

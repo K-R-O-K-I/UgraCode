@@ -45,7 +45,7 @@
   }, {passive: true});
 
   function eligible(url) {
-    return url.origin === location.origin && !/\/(export|receipt|avatar|access|enter|logout|leave)(\/|$)/.test(url.pathname);
+    return url.origin === location.origin && !/\/(export|receipt|document|avatar|access|enter|logout|leave)(\/|$)/.test(url.pathname);
   }
   function notice(message) {
     let element = document.getElementById('request-notice');

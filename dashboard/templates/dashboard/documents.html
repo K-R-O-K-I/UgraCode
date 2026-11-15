@@ -1,0 +1,7 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<div class="heading-row"><h1>Документы</h1></div>
+<p class="subtext">Родители принимают опубликованные документы перед оплатой. Для изменения текста загрузите новую версию, а старую снимите с публикации.</p>
+<form method="post" enctype="multipart/form-data" class="settings-card document-upload">{% csrf_token %}{{ form.as_p }}<button class="primary">Добавить документ</button></form>
+<section class="document-list">{% for document in documents %}<article class="settings-card"><h2>{{ document.title }}</h2><p class="subtext">{{ document.created_at|date:"d.m.Y H:i" }} · {% if document.active %}Опубликован{% else %}Архив{% endif %}</p><div class="form-actions document-actions"><a class="secondary" href="{% url 'payment-document' document.pk %}" target="_blank">Открыть документ</a>{% if document.active %}<form method="post">{% csrf_token %}<input type="hidden" name="document" value="{{ document.pk }}"><button class="secondary" name="action" value="archive">Снять с публикации</button></form>{% endif %}</div></article>{% empty %}<p>Документов пока нет.</p>{% endfor %}</section>
+{% endblock %}

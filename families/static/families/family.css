@@ -2,74 +2,73 @@
 .family-app main { padding-top:34px; }
 .family-app h1 { font-size:32px; }
 .family-app .heading-row { margin-bottom:28px; }
-.parent-contact { font-size:12px; color:#7d836f; }
+.parent-contact { font-size:12px; color:#00000099; }
 .child-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:17px; margin-bottom:32px; }
-.child-card { border:1px solid var(--line); background:var(--surface); border-radius:19px; padding:22px 24px 0; box-shadow:0 5px 16px #454f2907; }
+.child-card { border:1px solid var(--line); background:var(--surface); border-radius:19px; padding:22px 24px 0; box-shadow:0 5px 16px #D9000707; }
 .child-card-head { display:flex; align-items:center; gap:13px; }
-.child-avatar { width:47px; height:47px; display:grid; place-items:center; border-radius:15px; font-size:14px; color:#576346; background:#e5e9d9; }
-.child-avatar.color-sand { background:#eee3d5; color:#8b6e53; }
+.child-avatar { width:47px; height:47px; display:grid; place-items:center; border-radius:15px; font-size:14px; color:#D90007; background:#FFFFFF; }
+.child-avatar.color-sand { background:#FFFFFF; color:#D90007; }
 .child-card h2 { font-size:17px; letter-spacing:-.35px; }
 .child-card-head p { font-size:11px; color:var(--muted); margin:4px 0 0; }
 .child-card-balance { display:flex; align-items:center; gap:12px; padding:22px 0; }
 .child-card-balance>strong { font-size:36px; font-weight:500; letter-spacing:-1px; }
-.child-card-balance>span { font-size:12px; color:#65705a; }
-.child-card-balance small { display:block; font-size:10px; color:#939987; margin-top:3px; }
+.child-card-balance>span { font-size:12px; color:#D90007; }
+.child-card-balance small { display:block; font-size:10px; color:#00000099; margin-top:3px; }
 .child-card-balance>a { margin-left:auto; font-size:11px; }
-.child-book-link { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-top:1px solid var(--line); color:#65744b; font-size:12px; }
+.child-book-link { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-top:1px solid var(--line); color:#D90007; font-size:12px; }
 .family-layout { display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:26px; }
 .family-lesson { display:grid; grid-template-columns:52px 1fr 86px; gap:17px; padding:22px; border:1px solid var(--line); background:var(--surface); border-radius:17px; margin-bottom:14px; }
-.date-tile { border-radius:11px; background:#eef0e5; height:65px; text-align:center; padding:7px 3px; color:#69754e; }
+.date-tile { border-radius:11px; background:#FFFFFF; height:65px; text-align:center; padding:7px 3px; color:#D90007; }
 .date-tile strong { display:block; font-size:24px; line-height:1.2; font-weight:500; }
 .date-tile span { font-size:11px; }
 .family-lesson-body h2,.available-lesson h2,.visit-card h2,.payment-card h2 { font-size:17px; line-height:1.35; }
-.lesson-time-line { font-size:12px; color:#89907c; margin:7px 0 11px; }
+.lesson-time-line { font-size:12px; color:#00000099; margin:7px 0 11px; }
 .parent-lesson-photo { width:86px; height:99px; border-radius:12px; object-fit:cover; }
-.status-label { display:inline-flex; padding:4px 8px; border-radius:5px; font-size:10px; background:#eeeee7; color:#7a806c; }
-.status-label.booked,.status-label.present { background:#eaf0df; color:#647344; }
-.status-label.absent { background:#f3e8da; color:#977146; }
-.status-label.cancelled { background:#efeae5; color:#918274; }
-.family-lesson details { grid-column:1/-1; font-size:12px; color:#798369; padding-top:12px; border-top:1px solid var(--line); }
+.status-label { display:inline-flex; padding:4px 8px; border-radius:5px; font-size:10px; background:#eeeee7; color:#00000099; }
+.status-label.booked,.status-label.present { background:#FFFFFF; color:#D90007; }
+.status-label.absent { background:#FFFFFF; color:#D90007; }
+.status-label.cancelled { background:#FFFFFF; color:#00000099; }
+.family-lesson details { grid-column:1/-1; font-size:12px; color:#00000099; padding-top:12px; border-top:1px solid var(--line); }
 .family-lesson summary { cursor:pointer; }
-.family-lesson details p { color:#69715d; line-height:1.65; }
-.reason-note { padding:10px 12px; background:#f1f1e8; border-radius:8px; font-size:12px; line-height:1.6; }
+.family-lesson details p { color:#D90007; line-height:1.65; }
+.reason-note { padding:10px 12px; background:#FFFFFF; border-radius:8px; font-size:12px; line-height:1.6; }
 .mini-calendar { padding:21px; }
 .month-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
 .month-heading h2 { font-size:16px; text-transform:capitalize; }
 .month-heading>div { display:flex; gap:6px; }
-.month-heading a { display:grid; place-items:center; border:1px solid var(--line); border-radius:7px; width:27px; height:27px; color:#788367; }
+.month-heading a { display:grid; place-items:center; border:1px solid var(--line); border-radius:7px; width:27px; height:27px; color:#00000099; }
 .calendar-weekdays,.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-.calendar-weekdays { font-size:10px; color:#969b8c; text-align:center; margin-bottom:10px; }
-.month-grid a { display:flex; align-items:center; justify-content:center; flex-direction:column; height:35px; border-radius:8px; position:relative; font-size:12px; color:#59634f; }
-.month-grid a:hover { background:#eef1e3; }
-.month-grid a.outside { color:#c2c5ba; }
-.month-grid a.today { border:1px solid #b4bea0; }
+.calendar-weekdays { font-size:10px; color:#00000099; text-align:center; margin-bottom:10px; }
+.month-grid a { display:flex; align-items:center; justify-content:center; flex-direction:column; height:35px; border-radius:8px; position:relative; font-size:12px; color:#D90007; }
+.month-grid a:hover { background:#FFFFFF; }
+.month-grid a.outside { color:#00000018; }
+.month-grid a.today { border:1px solid #00000099; }
 .month-grid a.selected { background:var(--olive); color:white; }
 .month-grid i { width:3px; height:3px; background:currentColor; border-radius:50%; position:absolute; bottom:4px; }
-.calendar-legend { border-top:1px solid var(--line); padding-top:13px; margin:14px 0 0; display:flex; align-items:center; gap:7px; color:#929a83; font-size:10px; }
-.calendar-legend i { width:5px; height:5px; border-radius:50%; background:#7d8b5d; }
-.child-filter { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+.calendar-legend { border-top:1px solid var(--line); padding-top:13px; margin:14px 0 0; display:flex; align-items:center; gap:7px; color:#00000099; font-size:10px; }
+.calendar-legend i { width:5px; height:5px; border-radius:50%; background:#00000099; }
 .available-lesson { padding:23px; border:1px solid var(--line); border-radius:18px; background:var(--surface); margin-bottom:15px; }
 .available-top { display:flex; justify-content:space-between; gap:15px; }
-.task-text { font-size:13px; color:#88917b; line-height:1.7; margin:15px 0; }
+.task-text { font-size:13px; color:#00000099; line-height:1.7; margin:15px 0; }
 .own-booking { display:flex; gap:10px; align-items:center; border-top:1px solid var(--line); padding:12px 0; flex-wrap:wrap; }
 .own-booking strong { font-size:12px; font-weight:500; }
-.own-booking>a { margin-left:auto; font-size:11px; color:#8a7864; }
+.own-booking>a { margin-left:auto; font-size:11px; color:#00000099; }
 .visit-card { display:flex; align-items:flex-start; justify-content:space-between; gap:13px; flex-wrap:wrap; padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:16px; margin-bottom:12px; }
 .visit-card .reason-note { margin:0; }
-.payment-note { color:#8a795d; background:#f1ecdf; padding:11px 14px; border-radius:9px; font-size:12px; }
+.payment-note { color:#00000099; background:#FFFFFF; padding:11px 14px; border-radius:9px; font-size:12px; }
 .money-summary { display:flex; gap:18px; align-items:center; justify-content:space-between; padding:20px 24px; border:1px solid var(--line); border-radius:14px; background:var(--surface); margin:22px 0; }
-.money-summary span { font-size:12px; color:#868c7a; }
+.money-summary span { font-size:12px; color:#00000099; }
 .money-summary strong { font-size:25px; font-weight:500; }
 .pending-payment,.payment-card { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--line); padding:22px 24px; }
-.pending-payment { background:#eeefdf; border-radius:14px; margin-bottom:13px; }
-.pending-payment p,.payment-card p { font-size:12px; color:#8b917f; margin:4px 0 0; }
+.pending-payment { background:#FFFFFF; border-radius:14px; margin-bottom:13px; }
+.pending-payment p,.payment-card p { font-size:12px; color:#00000099; margin:4px 0 0; }
 .payment-list { background:var(--surface); border:1px solid var(--line); border-radius:17px; overflow:hidden; }
 .payment-card:last-child { border-bottom:0; }
 .payment-amount { font-size:21px; font-weight:500; }
 .receipt-links { flex-basis:100%; padding-top:9px; }
 .checkout-card { max-width:620px; }
 .checkout-amount { display:block; font-size:36px; font-weight:500; margin:20px 0; }
-.parent-note { font-size:11px; color:#8c775b; }
+.parent-note { font-size:11px; color:#00000099; }
 @media(max-width:1200px) {
  .family-layout { grid-template-columns:minmax(0,1fr) 280px; gap:18px; }
  .family-lesson { padding:17px; gap:12px; grid-template-columns:45px 1fr 67px; }
@@ -97,7 +96,6 @@
  .family-lesson details a { min-height:40px; display:inline-flex; align-items:center; }
  .month-grid a { height:39px; font-size:13px; }
  .mini-calendar { padding:21px; }
- .child-filter { gap:8px; }
  .visit-card { padding:18px; }
  .available-lesson { padding:18px; }
  .available-lesson .primary { width:100%; min-height:44px; }
@@ -110,28 +108,8 @@
 }
 
 @media (max-width:700px) { .family-app .topbar-actions { gap:12px; } }
-.child-filter button {
-  appearance:none;
-  max-width:100%;
-  min-height:44px;
-  padding:8px 15px;
-  border:1px solid #d8ddd0;
-  border-radius:999px;
-  background:linear-gradient(150deg, #fff 10%, #e9eee2 100%);
-  box-shadow:inset 0 1px 1px #fff, 0 2px 5px #303a2310;
-  color:#34412a;
-  font:inherit;
-  overflow-wrap:anywhere;
-  cursor:pointer;
-}
-.child-filter button[aria-pressed="true"] {
-  background:linear-gradient(145deg, #53623e, #39472b);
-  border-color:#465635;
-  box-shadow:inset 0 1px 1px #ffffff55, 0 3px 8px #39472b28;
-  color:#fff;
-}
-.child-filter button:focus-visible, .visit-reason:focus-visible {
-  outline:2px solid #53623e;
+.visit-reason:focus-visible {
+  outline:2px solid #D90007;
   outline-offset:2px;
 }
 .visit-main { flex:1 1 170px; min-width:0; }
@@ -142,7 +120,7 @@
   gap:4px 12px;
   margin-top:10px;
   font-size:14px;
-  color:#34412a;
+  color:#D90007;
 }
 .visit-time strong { font-size:17px; font-variant-numeric:tabular-nums; }
 .visit-card .reason-note, .visit-actions { flex-basis:100%; }
@@ -151,24 +129,24 @@
   align-items:center;
   min-height:36px;
   padding:4px 10px;
-  border:1px solid #d8ddd0;
+  border:1px solid #00000018;
   border-radius:9px;
   background:#f1f3ec;
-  color:#34412a;
+  color:#D90007;
   font-size:12px;
 }
-.visit-reason:hover { background:#e6ebdf; }
+.visit-reason:hover { background:#FFFFFF; }
 
 .child-avatar { flex-shrink:0; object-fit:cover; }
-.child-description { color:#59634f; font-size:13px; overflow-wrap:anywhere; white-space:pre-wrap; }
+.child-description { color:#D90007; font-size:13px; overflow-wrap:anywhere; white-space:pre-wrap; }
 .child-card-head h2 { overflow-wrap:anywhere; }
 .child-card-balance>a { text-align:right; }
-.month-grid i, .calendar-legend i { background:#a0aa8c; }
-.month-grid .booked-dot, .calendar-legend .booked-dot { background:#53623e; width:6px; height:6px; }
-.month-grid a.selected i { background:#fff; }
+.month-grid i, .calendar-legend i { background:#00000099; }
+.month-grid .booked-dot, .calendar-legend .booked-dot { background:#D90007; width:6px; height:6px; }
+.month-grid a.selected i { background:#ffffff; }
 .checkout-demo-brand { display:flex; align-items:center; gap:10px; margin-bottom:22px; }
-.checkout-demo-brand strong { color:#1c2740; font-size:22px; }
-.checkout-demo-brand span { padding:5px 8px; border-radius:6px; background:#eef2fb; color:#405780; font-size:12px; }
+.checkout-demo-brand strong { color:#D90007; font-size:22px; }
+.checkout-demo-brand span { padding:5px 8px; border-radius:6px; background:#FFFFFF; color:#D90007; font-size:12px; }
 
 @media (min-width:761px) and (max-width:980px) {
   .family-app .sidebar nav a { flex-direction:column; gap:5px; padding:9px 2px; }

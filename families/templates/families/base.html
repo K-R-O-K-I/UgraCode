@@ -1,25 +1,27 @@
 {% load static %}
 <!doctype html>
-<html lang="ru">
+<html lang="ru" translate="no">
 <head>
 <meta name="referrer" content="same-origin">
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#eceee5">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="{% static 'brand/yasna.png' %}">
 <title>Ясна · семейный кабинет</title>
 <link rel="stylesheet" href="{% static 'dashboard/styles.css' %}">
 <link rel="stylesheet" href="{% static 'families/family.css' %}">
-<link rel="stylesheet" href="{% static 'ui-refinements.css' %}?v=20261115-3">
-<script src="{% static 'app.js' %}?v=20261115-3" defer></script>
+<link rel="stylesheet" href="{% static 'ui-refinements.css' %}?v=20261115-11">
+<link rel="stylesheet" href="{% static 'brand.css' %}?v=3">
+<script src="{% static 'app.js' %}?v=20261115-11" defer></script>
 </head>
 <body class="family-app">
 <a class="skip-link" href="#content">Перейти к содержимому</a>
 <aside class="sidebar">
-<a class="brand" href="{% url 'family-home' %}"><span class="brand-mark">я</span><span>ясна<span class="brand-caption">мастерская и школа труда</span></span></a>
+<a class="brand" href="{% url 'family-home' %}"><img src="{% static 'brand/yasna.png' %}" class="brand-logo" alt="Ясна — мастерская и школа труда"></a>
 <div class="workspace-label">СЕМЕЙНЫЙ КАБИНЕТ</div>
 <nav aria-label="Разделы семьи">{% for key, label, icon in family_nav %}<a href="/family/?page={{ key }}" aria-label="{{ label }}" class="{% if page == key %}active{% endif %}" {% if page == key %}aria-current="page"{% endif %}>{% include "dashboard/icon.html" with key=icon %}<span class="nav-label">{{ label }}</span></a>{% endfor %}</nav>
 <div class="sidebar-bottom"><div class="workshop-address">Ясна<br><span>Столярная мастерская · Сургут</span></div><div class="profile"><span class="avatar">{{ family.contact_name|first }}</span><span><strong>{{ family.contact_name }}</strong><small>Родитель</small></span></div></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><span class="breadcrumbs">Ясна <span>/</span> Семейный кабинет</span><div class="topbar-actions"><span class="parent-contact">{{ family.contact_name }}</span><a class="icon-button" href="/family/?page=notifications" aria-label="Уведомления">{% include "dashboard/icon.html" with key="bell" %}{% if unread %}<span class="notification-dot"></span>{% endif %}</a></div></header>
+<header class="topbar"><a class="mobile-brand" href="/family/"><img src="{% static 'brand/yasna.png' %}" alt="Ясна" class="brand-logo"></a><span class="breadcrumbs">Ясна <span>/</span> Семейный кабинет</span><div class="topbar-actions"><span class="parent-contact">{{ family.contact_name }}</span><a class="icon-button" href="/family/?page=notifications" aria-label="Уведомления">{% include "dashboard/icon.html" with key="bell" %}{% if unread %}<span class="notification-dot"></span>{% endif %}</a></div></header>
 <main id="content">{% for message in messages %}<div class="flash" role="status">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
 <footer>Ясна · мастерская и школа труда <span>Сургут</span></footer>
 </div>

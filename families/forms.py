@@ -42,10 +42,6 @@ class CancelForm(forms.Form):
     confirm_late = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
 
-class ReasonForm(forms.Form):
-    reason = forms.CharField(label="Причина отсутствия", max_length=500, widget=forms.Textarea(attrs={"rows": 3}))
-
-
 class BuyForm(forms.Form):
     child = forms.ModelChoiceField(label="Ребёнок", queryset=Child.objects.none())
     plan = forms.ModelChoiceField(label="Абонемент", queryset=PassPlan.objects.filter(public=True))

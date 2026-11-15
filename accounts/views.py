@@ -44,20 +44,6 @@ def family_login(request, token):
 
 
 @never_cache
-@require_safe
-def family_cabinet(request):
-    family = family_from_request(request)
-    if family is None:
-        return render(request, "accounts/unavailable.html", status=403)
-    from dashboard.models import Booking, Payment
-    return render(request, "accounts/cabinet.html", {
-        "family": family, "children": family.children.all().order_by("name"),
-        "bookings": Booking.objects.filter(child__family=family).select_related("child", "lesson").order_by("-lesson__starts_at"),
-        "payments": Payment.objects.filter(invoice__child__family=family).select_related("invoice__child"),
-    })
-
-
-@never_cache
 @require_POST
 def family_logout(request):
     request.session.pop(SESSION_KEY, None)

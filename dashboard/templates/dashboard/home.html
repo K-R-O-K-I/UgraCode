@@ -2,10 +2,11 @@
 {% load static %}
 {% block content %}
 {% if page == "schedule" or page == "journal" %}
-<div class="heading-row"><div><h1>{% if page == "schedule" %}Сегодня в мастерской{% else %}Расписание занятий{% endif %}</h1><p class="subtext">Ваши занятия на {{ day|date:"l j E" }}</p></div></div>
+<div class="heading-row"><div><h1>{% if page == "schedule" %}Сегодня в мастерской{% else %}Расписание занятий{% endif %}</h1><p class="subtext">{% if period == "day" %}Ваши занятия на {{ day|date:"l j E" }}{% else %}{{ range_start|date:"j E" }} — {{ range_end|date:"j E Y" }}{% endif %}</p></div></div>
 {% if page == "journal" %}
-<form class="calendar-control journal-calendar" method="get"><input type="hidden" name="page" value="journal"><a class="icon-button" href="?page=journal&date={{ previous|date:'Y-m-d' }}" aria-label="Предыдущая неделя">‹</a><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" aria-label="Дата занятий"><button class="secondary">Показать</button><a class="icon-button" href="?page=journal&date={{ following|date:'Y-m-d' }}" aria-label="Следующая неделя">›</a></form>
-<div class="day-strip">{% for item in week %}<a class="day {% if item.date == day %}active{% endif %}" href="?page=journal&date={{ item.date|date:'Y-m-d' }}"><span>{{ item.date|date:"D" }}</span><strong>{{ item.date|date:"j" }}</strong></a>{% endfor %}</div>
+<div class="period-controls" aria-label="Период расписания">{% for value, label in period_options %}<a class="secondary {% if period == value %}period-active{% endif %}" href="?page=journal&date={{ day|date:'Y-m-d' }}&period={{ value }}">{{ label }}</a>{% endfor %}</div>
+<form class="calendar-control journal-calendar" method="get"><input type="hidden" name="page" value="journal"><input type="hidden" name="period" value="{{ period }}"><a class="icon-button" href="?page=journal&period={{ period }}&date={{ previous|date:'Y-m-d' }}" aria-label="Предыдущий период">‹</a><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" aria-label="Дата занятий"><button class="secondary">Показать</button><a class="icon-button" href="?page=journal&period={{ period }}&date={{ following|date:'Y-m-d' }}" aria-label="Следующий период">›</a></form>
+{% if calendar_days %}<div class="calendar-scroll"><div class="schedule-grid schedule-{{ period }}">{% for item in calendar_days %}<div class="calendar-cell {% if item.date == today %}calendar-today{% endif %} {% if not item.in_month %}outside-month{% endif %}"><a class="calendar-date" href="?page=journal&period=day&date={{ item.date|date:'Y-m-d' }}">{{ item.date|date:"D, j" }}</a>{% for lesson in item.lessons %}<a class="calendar-event {% if lesson.status == 'cancelled' %}event-cancelled{% endif %}" href="?page=journal&period=day&date={{ item.date|date:'Y-m-d' }}&lesson={{ lesson.pk }}#lesson-{{ lesson.pk }}"><strong>{{ lesson.starts_at|date:"H:i" }}</strong> <span class="calendar-event-title">{{ lesson.title }}</span></a>{% endfor %}</div>{% endfor %}</div></div>{% endif %}
 <div class="create-lesson-row"><a class="primary" href="{% url 'operation' 'lesson' %}?date={{ day|date:'Y-m-d' }}">+ Создать занятие на {{ day|date:"j E" }}</a></div>
 {% else %}
 <section class="day-summary" aria-labelledby="day-summary-title">
@@ -16,12 +17,13 @@
 <section class="lesson-section lesson-list{% if page == 'schedule' %} today-lessons{% endif %}"{% if page == "schedule" %} aria-labelledby="today-lessons-title"{% endif %}>
 {% if page == "schedule" %}<h2 id="today-lessons-title">Занятия на сегодня</h2>{% endif %}
 {% for lesson in lessons %}
+{% if period != "day" %}{% ifchanged lesson.starts_at|date:"Y-m-d" %}<h2 class="schedule-date-heading">{{ lesson.starts_at|date:"l, j E" }}</h2>{% endifchanged %}{% endif %}
 <article class="lesson-card lesson-expandable" data-start="{{ lesson.starts_at|date:'c' }}" data-end="{{ lesson.ends_at|date:'c' }}">
-<details class="lesson-attendance" id="lesson-{{ lesson.pk }}"><summary class="lesson-cover">{% include "dashboard/lesson_cover.html" %}</summary>
+<details class="lesson-attendance" id="lesson-{{ lesson.pk }}"{% if request.GET.lesson and selected.pk == lesson.pk %} open{% endif %}><summary class="lesson-cover">{% include "dashboard/lesson_cover.html" %}</summary>
 <div class="inline-attendance">
 {% for booking in lesson.active_bookings %}
 <div class="student-row"><div class="student-info">{% include "accounts/child_avatar.html" with child=booking.child %}<div><a class="child-profile-link" href="{% url 'child-profile' booking.child.pk %}">{{ booking.child.name }}</a> {% include "accounts/child_age.html" with child=booking.child %}<div class="subtext">Остаток {{ booking.child.balance }} зан.</div></div></div>
-{% if lesson.status == "scheduled" %}<form method="post" action="{% url 'quick-attendance' booking.pk %}" class="attendance-actions">{% csrf_token %}<input type="hidden" name="return_page" value="{{ page }}"><button name="attendance" value="present" class="{% if booking.attendance == 'present' %}is-present{% endif %}">Был</button><button name="attendance" value="absent" class="{% if booking.attendance == 'absent' %}is-absent{% endif %}">Пропуск</button>{% if booking.attendance != "pending" %}<button name="attendance" value="pending">Снять отметку</button>{% endif %}</form>{% endif %}</div>
+{% if lesson.status == "scheduled" %}<form method="post" action="{% url 'quick-attendance' booking.pk %}" class="attendance-actions">{% csrf_token %}<input type="hidden" name="return_page" value="{{ page }}"><input type="hidden" name="return_period" value="{{ period }}"><button name="attendance" value="present" aria-pressed="{% if booking.attendance == 'present' %}true{% else %}false{% endif %}" class="{% if booking.attendance == 'present' %}is-present{% endif %}">Был</button><button name="attendance" value="absent" aria-pressed="{% if booking.attendance == 'absent' %}true{% else %}false{% endif %}" class="{% if booking.attendance == 'absent' %}is-absent{% endif %}">Пропуск</button></form>{% endif %}</div>
 {% empty %}<p class="subtext">Записей пока нет</p>{% endfor %}
 </div></details>
 

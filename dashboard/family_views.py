@@ -97,7 +97,10 @@ def quick_attendance(request, pk):
             messages.success(request, "Отметка сохранена.")
     day = timezone.localdate(booking.lesson.starts_at).isoformat()
     page = "journal" if request.POST.get("return_page") == "journal" else "schedule"
-    return redirect(f"/?page={page}&date={day}&lesson={booking.lesson_id}")
+    period = request.POST.get("return_period", "day")
+    if period not in {"day", "week", "month"}:
+        period = "day"
+    return redirect(f"/?page={page}&date={day}&period={period}&lesson={booking.lesson_id}")
 
 
 @staff_only
